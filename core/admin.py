@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import PerfilCargo, Postulante, PautaEntrevistaIA
+from .models import Cliente, Pedido
 
-admin.site.register(PerfilCargo)
-admin.site.register(Postulante)
-admin.site.register(PautaEntrevistaIA)
+admin.site.register(Cliente)
+admin.site.register(Pedido)

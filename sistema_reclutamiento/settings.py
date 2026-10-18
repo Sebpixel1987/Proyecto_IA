@@ -76,7 +76,7 @@ WSGI_APPLICATION = 'sistema_reclutamiento.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'reclutamiento_db',
+        'NAME': 'emporio_db',
         'USER': 'admin',
         'PASSWORD': '1234',
         'HOST': 'localhost',
