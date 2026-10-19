@@ -51,11 +51,11 @@ sudo -u postgres psql
 Dentro de la consola SQL, ejecuta línea por línea para crear la base de datos y otorgar permisos:
 
 CREATE DATABASE emporio_db;
-CREATE USER ragnarok_admin WITH PASSWORD 'ragnarok2026';
-ALTER ROLE ragnarok_admin SET client_encoding TO 'utf8';
-ALTER ROLE ragnarok_admin SET default_transaction_isolation TO 'read committed';
-ALTER ROLE ragnarok_admin SET timezone TO 'America/Santiago';
-GRANT ALL PRIVILEGES ON DATABASE emporio_db TO ragnarok_admin;
+CREATE USER admin WITH PASSWORD '1234';
+ALTER ROLE admin SET client_encoding TO 'utf8';
+ALTER ROLE admin SET default_transaction_isolation TO 'read committed';
+ALTER ROLE admin SET timezone TO 'America/Santiago';
+GRANT ALL PRIVILEGES ON DATABASE emporio_db TO admin;
 \c emporio_db
 GRANT ALL ON SCHEMA public TO ragnarok_admin;
 \q
