@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core', # Aplicación principal del equipo Ragnarök
+    'logistica', # Aplicación de logística
 ]
 
 MIDDLEWARE = [
