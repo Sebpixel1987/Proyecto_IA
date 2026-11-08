@@ -19,5 +19,5 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('logistica.urls')), # Conecta la app de logística a la raíz del sitio
+    path('', include('logistica.urls')),
 ]
