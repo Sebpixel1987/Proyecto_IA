@@ -1,4 +1,4 @@
-Sistema de Logística y Rutas - Emporio Alemán 🚚
+Sistema de Logística y Rutas - Emporio Alemán 
 
 Este proyecto es una aplicación web desarrollada en Django y PostgreSQL para gestionar clientes, pedidos y optimizar rutas de entrega para el Emporio Alemán.
 
