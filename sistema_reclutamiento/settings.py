@@ -78,7 +78,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'emporio_db',
-        'USER': 'admin',
+        'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '5432',
