@@ -1,0 +1,104 @@
+{% extends 'logistica/base.html' %}
+
+{% block title %}Carga Masiva Excel / CSV - Emporio Alemán{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0"><i class="fa-solid fa-file-excel text-success me-2"></i>Carga Masiva de Pedidos y Clientes</h2>
+        <p class="text-muted mb-0">Importación estandarizada desde archivos Excel (<code>.xlsx</code>) o <code>.csv</code> hacia Preventa</p>
+    </div>
+    <a href="{% url 'panel_admin' %}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i> Volver al Panel Admin
+    </a>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- PASO 1: DESCARGAR PLANTILLA -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-download me-2 text-warning"></i>1. Descargar Plantilla Oficial</h5>
+            </div>
+            <div class="card-body d-flex flex-column">
+                <p class="small text-muted">
+                    Utiliza nuestra plantilla estandarizada para evitar errores de formato. Incluye ejemplos con coordenadas reales del Gran Concepción y agrupación automática de múltiples productos por pedido.
+                </p>
+                <div class="d-grid gap-2 mb-4">
+                    <a href="{% url 'descargar_plantilla_carga' %}?formato=xlsx" class="btn btn-success fw-semibold">
+                        <i class="fa-solid fa-file-excel me-2"></i> Descargar Plantilla Excel (.xlsx)
+                    </a>
+                    <a href="{% url 'descargar_plantilla_carga' %}?formato=csv" class="btn btn-outline-dark">
+                        <i class="fa-solid fa-file-csv me-2"></i> Descargar Plantilla CSV (.csv)
+                    </a>
+                </div>
+
+                <h6 class="fw-bold small text-uppercase text-muted border-bottom pb-1">Columnas requeridas en el archivo:</h6>
+                <div class="small text-muted" style="max-height: 220px; overflow-y: auto;">
+                    <ul class="ps-3 mb-0">
+                        <li><code>cliente_usuario</code>: Identificador único del local (si es nuevo se crea con clave <code>1234</code>).</li>
+                        <li><code>nombre_local</code>: Razón social o nombre comercial.</li>
+                        <li><code>telefono</code>: Número de contacto.</li>
+                        <li><code>direccion</code> y <code>comuna</code>: Punto de descarga.</li>
+                        <li><code>latitud</code> y <code>longitud</code>: Coordenadas decimales (ej: <code>-36.8269</code>, <code>-73.0498</code>).</li>
+                        <li><code>fecha_entrega</code>: Formato <code>AAAA-MM-DD</code>.</li>
+                        <li><code>ventana_inicio</code> / <code>ventana_fin</code>: Horario <code>HH:MM</code> (opcional).</li>
+                        <li><code>producto</code>, <code>peso_unitario_kg</code>, <code>cantidad</code>: Detalle de carga.</li>
+                        <li><code>observaciones</code>: Restricciones de entrega (opcional).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASO 2: SUBIR ARCHIVO -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-cloud-arrow-up me-2"></i>2. Subir Archivo de Datos Externos</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="border border-2 border-dashed rounded p-4 text-center bg-light mb-3">
+                        <i class="fa-solid fa-table fa-3x text-primary mb-2"></i>
+                        <h6 class="fw-bold">Selecciona tu planilla Excel (.xlsx) o CSV</h6>
+                        <p class="small text-muted mb-3">Si varias filas tienen el mismo <code>cliente_usuario</code> y <code>fecha_entrega</code>, se agruparán automáticamente en un solo pedido.</p>
+                        <input type="file" name="archivo_datos" accept=".xlsx,.csv" class="form-control" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                            <i class="fa-solid fa-gears me-2"></i> Validar e Importar a Preventa
+                        </button>
+                    </div>
+                </form>
+
+                {% if resumen_importacion %}
+                <div class="alert alert-success mt-4 mb-0">
+                    <h6 class="fw-bold"><i class="fa-solid fa-circle-check me-1"></i> Resumen de Importación Completada</h6>
+                    <ul class="mb-2 small">
+                        <li><strong>Pedidos creados en Preventa:</strong> {{ resumen_importacion.pedidos_creados }}</li>
+                        <li><strong>Líneas de producto cargadas:</strong> {{ resumen_importacion.items_creados }}</li>
+                        <li><strong>Clientes nuevos registrados:</strong> {{ resumen_importacion.clientes_creados }}</li>
+                    </ul>
+                    <a href="{% url 'panel_admin' %}" class="btn btn-sm btn-success fw-bold">
+                        Ir al Panel Admin y Optimizar Flota &rarr;
+                    </a>
+                </div>
+                {% endif %}
+
+                {% if errores_fila %}
+                <div class="alert alert-danger mt-4 mb-0">
+                    <h6 class="fw-bold"><i class="fa-solid fa-triangle-exclamation me-1"></i> Errores detectados en el archivo (no se guardaron cambios):</h6>
+                    <ul class="mb-0 small" style="max-height: 180px; overflow-y: auto;">
+                        {% for err in errores_fila %}
+                        <li>{{ err }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

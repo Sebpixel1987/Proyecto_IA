@@ -1,0 +1,125 @@
+{% extends 'logistica/base.html' %}
+
+{% block title %}Portal Cliente - Emporio Alemán{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-1">Bienvenido, {{ cliente }}</h2>
+        <p class="text-muted mb-0">
+            <i class="fa-solid fa-location-dot text-danger me-1"></i>
+            Dirección registrada: <strong>{{ cliente.ubicacion_principal }}</strong>
+        </p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <!-- FORMULARIO NUEVO PEDIDO -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-cart-plus me-2"></i>Realizar Nuevo Pedido</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Fecha de entrega esperada</label>
+                            <input type="date" name="fecha_entrega_esperada" value="{{ hoy }}" min="{{ hoy }}" class="form-control" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Recibir desde</label>
+                            <input type="time" name="ventana_horaria_inicio" value="{{ cliente.ventana_horaria_inicio|time:'H:i' }}" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Recibir hasta</label>
+                            <input type="time" name="ventana_horaria_fin" value="{{ cliente.ventana_horaria_fin|time:'H:i' }}" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Catálogo de Productos Disponibles</label>
+                        <div class="table-responsive border rounded" style="max-height: 280px;">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Peso Unit.</th>
+                                        <th class="text-center">Stock</th>
+                                        <th style="width: 95px;">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prod in productos %}
+                                    <tr>
+                                        <td class="fw-semibold">{{ prod.nombre }}</td>
+                                        <td class="text-center">{{ prod.peso_kg }} kg</td>
+                                        <td class="text-center"><span class="badge bg-secondary">{{ prod.cantidad_disponible }}</span></td>
+                                        <td>
+                                            <input type="number" name="cantidad_{{ prod.id }}" min="0" max="{{ prod.cantidad_disponible }}" value="0" class="form-control form-control-sm text-center">
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-3">No hay productos con stock disponible en este momento.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Requisitos o Restricciones de Entrega</label>
+                        <textarea name="observaciones" rows="2" class="form-control" placeholder="Ej: Llamar 10 min antes, descargar por acceso lateral, requiere factura física..."></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Enviar Pedido a Despacho
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORIAL DE PEDIDOS DEL CLIENTE -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="fa-solid fa-box-open me-2 text-warning"></i>Mis Pedidos Realizados</h5>
+            </div>
+            <div class="card-body">
+                {% for ped in mis_pedidos %}
+                <div class="border rounded p-3 mb-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold fs-6">Pedido #{{ ped.id }}</span>
+                        <span class="badge {% if ped.estado == 'ENTREGADO' %}bg-success{% elif ped.estado == 'EN_RUTA' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                            {{ ped.get_estado_display }}
+                        </span>
+                    </div>
+                    <div class="small text-muted mb-2">
+                        <i class="fa-regular fa-calendar me-1"></i> Entrega: <strong>{{ ped.fecha_entrega_esperada|date:"d/m/Y" }}</strong>
+                        &bull; Peso total: <strong>{{ ped.peso_total_kg }} kg</strong>
+                    </div>
+                    <ul class="small mb-2 ps-3">
+                        {% for det in ped.detalles.all %}
+                        <li>{{ det.cantidad }}x {{ det.producto.nombre }} ({{ det.subtotal_kg }} kg)</li>
+                        {% endfor %}
+                    </ul>
+                    {% if ped.observaciones %}
+                    <div class="alert alert-light border small py-1 px-2 mb-0">
+                        <strong>Restricción:</strong> {{ ped.observaciones }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-muted text-center py-4">Aún no has realizado pedidos.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends 'logistica/base.html' %}
+
+{% block title %}Registro de Cliente - Emporio Alemán{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #mapa-registro { height: 320px; width: 100%; border-radius: 8px; border: 1px solid #ced4da; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mb-5">
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-3">
+                <h4 class="mb-0"><i class="fa-solid fa-store me-2"></i>Registro de Nuevo Cliente Comercial</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Por favor corrige los errores señalados en el formulario.
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">1. Datos de Acceso y Contacto</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.nombre_completo.label }}</label>
+                            {{ form.nombre_completo }}
+                            <div class="text-danger small">{{ form.nombre_completo.errors }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.telefono.label }}</label>
+                            {{ form.telefono }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.username.label }}</label>
+                            {{ form.username }}
+                            <div class="text-danger small">{{ form.username.errors }}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.email.label }}</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.password.label }}</label>
+                            {{ form.password }}
+                        </div>
+                    </div>
+
+                    <h6 class="text-uppercase text-muted fw-bold border-bottom pb-2 mb-3">2. Ubicación de Entrega y Ventana Horaria</h6>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">{{ form.direccion.label }}</label>
+                            {{ form.direccion }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">{{ form.comuna.label }}</label>
+                            {{ form.comuna }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.latitud.label }}</label>
+                            {{ form.latitud }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.longitud.label }}</label>
+                            {{ form.longitud }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.ventana_horaria_inicio.label }}</label>
+                            {{ form.ventana_horaria_inicio }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.ventana_horaria_fin.label }}</label>
+                            {{ form.ventana_horaria_fin }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small text-muted">
+                            <i class="fa-solid fa-location-crosshairs text-danger me-1"></i>
+                            Haz clic en el mapa para marcar el punto exacto de descarga de tu local:
+                        </label>
+                        <div id="mapa-registro"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success btn-lg px-4">
+                            <i class="fa-solid fa-check me-2"></i>Crear Cuenta y Continuar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const latInput = document.getElementById('id_latitud');
+    const lonInput = document.getElementById('id_longitud');
+    const initLat = parseFloat(latInput.value) || -36.8270;
+    const initLon = parseFloat(lonInput.value) || -73.0503;
+
+    const map = L.map('mapa-registro').setView([initLat, initLon], 12);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri'
+    }).addTo(map);
+
+    let marker = L.marker([initLat, initLon], { draggable: true }).addTo(map);
+
+    function actualizarCoords(lat, lng) {
+        latInput.value = lat.toFixed(6);
+        lonInput.value = lng.toFixed(6);
+    }
+
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        actualizarCoords(e.latlng.lat, e.latlng.lng);
+    });
+
+    marker.on('dragend', function(e) {
+        const pos = marker.getLatLng();
+        actualizarCoords(pos.lat, pos.lng);
+    });
+</script>
+{% endblock %}
