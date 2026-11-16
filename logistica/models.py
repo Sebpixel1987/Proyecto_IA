@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 class PerfilUsuario(models.Model):
     ROLES = (
@@ -11,7 +12,7 @@ class PerfilUsuario(models.Model):
     rol = models.CharField(max_length=15, choices=ROLES)
 
     def __str__(self):
-        return f"{self.usuario.username} - {self.rol}"
+        return f"{self.usuario.username} ({self.rol})"
 
 class Ubicacion(models.Model):
     direccion = models.CharField(max_length=255, help_text="Dirección estandarizada")
@@ -46,7 +47,8 @@ class Camion(models.Model):
     capacidad_max_kg = models.DecimalField(max_digits=6, decimal_places=2, default=1600.00)
 
     def __str__(self):
-        return f"Camión {self.patente} - Conductor: {self.conductor.usuario.username if self.conductor else 'Sin Asignar'}"
+        conductor_nombre = self.conductor.usuario.username if self.conductor else 'Sin Asignar'
+        return f"Camión {self.patente} - Conductor: {conductor_nombre}"
 
 class Pedido(models.Model):
     ESTADOS = (
@@ -72,3 +74,15 @@ class DetallePedido(models.Model):
 
     def __str__(self):
         return f"{self.cantidad}x {self.producto.nombre} (Ped. #{self.pedido.id})"
+
+class RutaHistorica(models.Model):
+    camion = models.ForeignKey(Camion, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Camión Asignado")
+    fecha_ejecucion = models.DateTimeField(default=timezone.now, verbose_name="Fecha de Ejecución")
+    distancia_total_km = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Distancia Total (km)")
+    tiempo_estimado_min = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Tiempo Estimado (min)")
+    pedidos_incluidos = models.ManyToManyField(Pedido, blank=True, verbose_name="Pedidos en la Ruta")
+    geometria_osrm = models.JSONField(null=True, blank=True, verbose_name="Trazado OSRM (GeoJSON)")
+
+    def __str__(self):
+        patente = self.camion.patente if self.camion else "Sin Camión"
+        return f"Ruta #{self.id} - Camión {patente} ({self.fecha_ejecucion.strftime('%d/%m/%Y %H:%M')})"

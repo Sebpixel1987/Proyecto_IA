@@ -1,9 +1,10 @@
 import folium
 import requests
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Pedido, Camion
+from .models import Pedido, Camion, RutaHistorica, Ubicacion
+from .forms import UbicacionForm, PedidoExternoForm
 from .utils import optimizar_y_asignar_rutas
 
 @login_required(login_url='/admin/login/')
@@ -26,12 +27,24 @@ def panel_admin(request):
     
     if request.method == 'POST':
         optimizar_y_asignar_rutas()
+        
+        # Guardado automático en el Historial de Rutas
+        camiones = Camion.objects.all()
+        for camion in camiones:
+            pedidos_asignados = Pedido.objects.filter(camion_asignado=camion, estado='EN_RUTA')
+            if pedidos_asignados.exists():
+                ruta_hist = RutaHistorica.objects.create(
+                    camion=camion,
+                    distancia_total_km=15.5,
+                    tiempo_estimado_min=30.0
+                )
+                ruta_hist.pedidos_incluidos.set(pedidos_asignados)
+                
         return redirect('panel_admin')
         
     pedidos_preventa = Pedido.objects.filter(estado='PREVENTA').count()
     pedidos_en_ruta = Pedido.objects.filter(estado='EN_RUTA').order_by('camion_asignado', 'orden_en_ruta')
     
-    # Agrupar pedidos por camión para una vista profesional
     rutas_por_camion = {}
     for p in pedidos_en_ruta:
         patente = p.camion_asignado.patente
@@ -39,7 +52,6 @@ def panel_admin(request):
             rutas_por_camion[patente] = []
         rutas_por_camion[patente].append(p)
 
-    # Construir las tablas HTML por cada camión
     tablas_html = ""
     if not rutas_por_camion:
         tablas_html = """
@@ -87,7 +99,6 @@ def panel_admin(request):
             </div>
             """
 
-    # HTML completo con Bootstrap 5 y FontAwesome
     html = f"""
     <!DOCTYPE html>
     <html lang="es">
@@ -95,9 +106,7 @@ def panel_admin(request):
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard Logístico - Emporio Alemán</title>
-        <!-- Bootstrap 5 CDN -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- FontAwesome CDN -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
         <style>
             body {{ background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }}
@@ -107,7 +116,6 @@ def panel_admin(request):
         </style>
     </head>
     <body>
-        <!-- Barra de Navegación -->
         <nav class="navbar navbar-expand-lg navbar-dark shadow-sm mb-4">
             <div class="container">
                 <a class="navbar-brand fw-bold" href="#">
@@ -120,7 +128,6 @@ def panel_admin(request):
         </nav>
 
         <div class="container">
-            <!-- Cabecera y Botones de Acción -->
             <div class="row align-items-center mb-4">
                 <div class="col-md-6">
                     <h2 class="fw-bold text-dark mb-0">Monitor de Despachos</h2>
@@ -133,13 +140,18 @@ def panel_admin(request):
                             <i class="fa-solid fa-microchip me-2"></i> Optimizar Flota
                         </button>
                     </form>
-                    <a href="/mapa/" target="_blank" class="btn btn-success btn-lg shadow-sm">
+                    <a href="/mapa/" target="_blank" class="btn btn-success btn-lg shadow-sm me-2">
                         <i class="fa-solid fa-map-location-dot me-2"></i> Ver Mapa (OSRM)
+                    </a>
+                    <a href="/historial/" class="btn btn-dark btn-lg shadow-sm me-2">
+                        <i class="fa-solid fa-history me-2"></i> Historial
+                    </a>
+                    <a href="/datos/nuevo/" class="btn btn-secondary btn-lg shadow-sm">
+                        <i class="fa-solid fa-plus-circle me-2"></i> Nuevo Pedido
                     </a>
                 </div>
             </div>
 
-            <!-- Tarjetas de Métricas -->
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="card metric-card shadow-sm border-0">
@@ -152,7 +164,6 @@ def panel_admin(request):
                 </div>
             </div>
 
-            <!-- Tablas de Camiones -->
             <h4 class="fw-bold mb-3 text-secondary border-bottom pb-2">
                 <i class="fa-solid fa-list-check me-2"></i> Rutas Asignadas ({len(rutas_por_camion)} camiones activos)
             </h4>
@@ -173,8 +184,7 @@ def panel_conductor(request):
     camion = Camion.objects.filter(conductor__usuario=request.user).first()
     rutas = Pedido.objects.filter(camion_asignado=camion, estado='EN_RUTA').order_by('orden_en_ruta') if camion else []
     
-    lista_rutas = ''.join([f"<li>Pedido #{p.id} - Destino: {p.ubicacion_entrega.direccion}, {p.ubicacion_entrega.comuna} (Llegar y Cumplir)</li>" for p in rutas])
-    
+    lista_rutas = ''.join([f"<li><strong>Pedido #{p.id}</strong> - Destino: {p.ubicacion_entrega.direccion}, {p.ubicacion_entrega.comuna}</li>" for p in rutas])
     html = f"<h1>Hoja de Ruta - Camión: {camion.patente if camion else 'Sin Asignar'}</h1><ol>{lista_rutas}</ol>"
     return HttpResponse(html)
 
@@ -184,9 +194,7 @@ def panel_cliente(request):
         return HttpResponse("Acceso denegado.")
         
     pedidos = Pedido.objects.filter(cliente__perfil__usuario=request.user)
-    
-    lista_pedidos = ''.join([f"<li>Pedido #{p.id} - Estado: {p.estado} - Fecha: {p.fecha_entrega_esperada}</li>" for p in pedidos])
-    
+    lista_pedidos = ''.join([f"<li><strong>Pedido #{p.id}</strong> | Estado: {p.estado} | Fecha: {p.fecha_entrega_esperada}</li>" for p in pedidos])
     html = f"<h1>Mis Pedidos</h1><ul>{lista_pedidos}</ul>"
     return HttpResponse(html)
 
@@ -243,7 +251,6 @@ def mapa_rutas_view(request):
         try:
             response = requests.get(osrm_url, timeout=10)
             data = response.json()
-            
             if data.get('code') == 'Ok':
                 trazado_real = data['routes'][0]['geometry']['coordinates']
                 coordenadas_ruta_final = [[lat, lon] for lon, lat in trazado_real]
@@ -269,7 +276,7 @@ def mapa_rutas_view(request):
     <body style="font-family: sans-serif; margin: 0; padding: 20px; background: #f4f4f9;">
         <h2 style="text-align:center; color: #333;">Optimización de Última Milla (OSRM)</h2>
         <div style="text-align:center; margin-bottom: 15px;">
-            <a href="/dashboard/" style="padding: 10px 20px; background: #555; color: white; text-decoration: none; border-radius: 5px;">Volver al Panel</a>
+            <a href="/panel-admin/" style="padding: 10px 20px; background: #555; color: white; text-decoration: none; border-radius: 5px;">Volver al Panel</a>
         </div>
         <div style="width: 95%; max-width: 1200px; margin: 0 auto; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); overflow: hidden;">
             {mapa_html}
@@ -277,5 +284,187 @@ def mapa_rutas_view(request):
     </body>
     </html>
     """
-    
     return HttpResponse(html_completo)
+
+@login_required(login_url='/admin/login/')
+def historial_rutas(request):
+    if request.user.perfilusuario.rol != 'ADMIN': 
+        return HttpResponse("Acceso denegado.")
+        
+    rutas = RutaHistorica.objects.all().order_by('-fecha_ejecucion')
+    filas = ""
+    for r in rutas:
+        patente = r.camion.patente if r.camion else "N/A"
+        filas += f"""
+        <tr>
+            <td>#{r.id}</td>
+            <td><i class="fa-solid fa-truck me-1"></i> {patente}</td>
+            <td>{r.fecha_ejecucion.strftime('%d/%m/%Y %H:%M')}</td>
+            <td>{r.distancia_total_km} km</td>
+            <td>{r.tiempo_estimado_min} min</td>
+            <td>
+                <a href="/historial/{r.id}/" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-map-marked-alt me-1"></i> Ver Detalle
+                </a>
+            </td>
+        </tr>
+        """
+        
+    if not filas:
+        filas = '<tr><td colspan="6" class="text-center text-muted py-4">No hay rutas registradas en el historial todavía.</td></tr>'
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Historial de Rutas - Emporio Alemán</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    </head>
+    <body style="background-color: #f4f6f9;">
+        <div class="container mt-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fa-solid fa-history me-2 text-primary"></i>Historial de Rutas Logísticas</h2>
+                <div>
+                    <a href="/datos/nuevo/" class="btn btn-dark me-2"><i class="fa-solid fa-plus-circle me-1"></i> Ingresar Pedido</a>
+                    <a href="/panel-admin/" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Volver al Panel</a>
+                </div>
+            </div>
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID Ruta</th>
+                                    <th>Camión FOTON</th>
+                                    <th>Fecha de Ejecución</th>
+                                    <th>Distancia Total</th>
+                                    <th>Tiempo Estimado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filas}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html)
+
+@login_required(login_url='/admin/login/')
+def detalle_ruta_historica(request, pk):
+    if request.user.perfilusuario.rol != 'ADMIN': 
+        return HttpResponse("Acceso denegado.")
+        
+    ruta = get_object_or_404(RutaHistorica, pk=pk)
+    patente = ruta.camion.patente if ruta.camion else "N/A"
+    
+    lista_pedidos = ""
+    for p in ruta.pedidos_incluidos.all():
+        lista_pedidos += f"<li>Pedido #{p.id} - Destino: {p.ubicacion_entrega.direccion if p.ubicacion_entrega else 'N/A'}</li>"
+    if not lista_pedidos:
+        lista_pedidos = "<li class='text-muted'>Sin pedidos asociados.</li>"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Detalle Ruta #{ruta.id}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    </head>
+    <body style="background-color: #f4f6f9;">
+        <div class="container mt-4 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fa-solid fa-map-marked-alt me-2 text-primary"></i>Detalle de Ruta Histórica #{ruta.id}</h2>
+                <a href="/historial/" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i> Volver al Historial</a>
+            </div>
+            <div class="card shadow border-0 col-md-6">
+                <div class="card-header bg-dark text-white"><h5>Métricas del Despacho</h5></div>
+                <div class="card-body">
+                    <p><strong>Camión FOTON:</strong> {patente}</p>
+                    <p><strong>Fecha:</strong> {ruta.fecha_ejecucion.strftime('%d/%m/%Y %H:%M')}</p>
+                    <p><strong>Distancia:</strong> {ruta.distancia_total_km} km</p>
+                    <p><strong>Tiempo Estimado:</strong> {ruta.tiempo_estimado_min} min</p>
+                    <hr>
+                    <h6 class="text-primary">Pedidos Incluidos:</h6>
+                    <ul>{lista_pedidos}</ul>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html)
+
+@login_required(login_url='/admin/login/')
+def registrar_ubicacion_y_pedido(request):
+    if request.user.perfilusuario.rol != 'ADMIN': 
+        return HttpResponse("Acceso denegado.")
+        
+    if request.method == 'POST':
+        ubicacion_form = UbicacionForm(request.POST)
+        pedido_form = PedidoExternoForm(request.POST)
+        
+        if ubicacion_form.is_valid() and pedido_form.is_valid():
+            ubicacion = ubicacion_form.save()
+            pedido = pedido_form.save(commit=False)
+            pedido.ubicacion_entrega = ubicacion
+            pedido.save()
+            return redirect('historial_rutas')
+    else:
+        ubicacion_form = UbicacionForm()
+        pedido_form = PedidoExternoForm()
+
+    form_html = f"""
+    <form method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{request.META.get('CSRF_COOKIE', '')}">
+        <h5 class="text-primary border-bottom pb-2 mb-3">1. Datos de Ubicación</h5>
+        {ubicacion_form.as_p()}
+        
+        <h5 class="text-primary border-bottom pb-2 mb-3 mt-4">2. Datos del Pedido</h5>
+        {pedido_form.as_p()}
+        
+        <div class="d-grid gap-2 mt-4">
+            <button type="submit" class="btn btn-success btn-lg"><i class="fa-solid fa-save me-2"></i>Guardar en Sistema</button>
+            <a href="/panel-admin/" class="btn btn-outline-secondary">Cancelar / Volver al Panel</a>
+        </div>
+    </form>
+    """
+
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Ingreso Externo - Emporio Alemán</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    </head>
+    <body style="background-color: #f4f6f9;">
+        <div class="container mt-4 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-dark text-white">
+                            <h4 class="mb-0"><i class="fa-solid fa-map-marker-alt me-2"></i>Ingreso de Datos Externos (Ubicación y Pedido)</h4>
+                        </div>
+                        <div class="card-body">
+                            {form_html}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html)
