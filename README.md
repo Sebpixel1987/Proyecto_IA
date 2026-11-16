@@ -1,94 +1,79 @@
-Sistema de Logística y Rutas - Emporio Alemán 
+# Plataforma de Optimización Logística de Última Milla — Emporio Alemán
 
-Este proyecto es una aplicación web desarrollada en Django y PostgreSQL para gestionar clientes, pedidos y optimizar rutas de entrega para el Emporio Alemán.
+Sistema web de gestión de despachos y optimización de rutas de Última Milla desarrollado para **Emporio Alemán S.A.** (Gran Concepción, Chile) en colaboración con el **Laboratorio IAnts de la Universidad San Sebastián (USS)**.
 
-Requisitos Previos (Windows)
+El sistema modela la red de distribución como un grafo urbano y resuelve el Problema de Ruteo de Vehículos con Capacidad (CVRP) mediante un ensamble de **Red Neuronal de Grafos (GNN)** + **Optimización por Colonia de Hormigas (ACO)**, integrando visualización geoespacial real y flujos operativos diferenciados por rol[cite: 3, 57].
 
-Antes de comenzar, asegúrate de tener instalado en tu equipo Windows:
+---
 
-Visual Studio Code
+## Arquitectura y Stack Tecnológico
 
-Git for Windows
+* **Backend:** Python 3, Django 6.x
+* **Base de Datos:** PostgreSQL (`emporio_db`)[cite: 76]
+* **Motor de Optimización (IA):** Ensamble GNN + ACO ($\alpha=1.0$, $\beta=3.0$, $\rho=0.5$, 12 hormigas, 50 iteraciones)[cite: 79]
+* **Geoespacial y Mapas:** `folium`, Leaflet.js, tiles de *Esri World Street Map* y trazado vial real con **OSRM**[cite: 74]
+* **Frontend y Reportes:** HTML5, Bootstrap 5, FontAwesome 6, vistas de impresión/PDF nativas (`@media print`)
+* **Carga Masiva:** `openpyxl` (`.xlsx`) y módulo estándar `csv`
 
-Extensión WSL instalada en VS Code.
+---
 
-Guía de Instalación Paso a Paso
+## Reglas de Negocio y Parámetros Operativos
 
-1. Activar Entorno Linux (WSL)
+* **Punto de Origen y Retorno:** Planta Emporio Alemán en Chiguayante (`lat: -36.9158`, `lon: -73.0239`)[cite: 5, 79].
+* **Cobertura y Zonificación (Gran Concepción):**
+  * *Sector Talcahuano – Hualpén:* Martes, Jueves y Sábado (`M-J-S`)[cite: 5].
+  * *Sector Concepción Centro – Chiguayante:* Lunes a Sábado[cite: 5].
+  * *Eje San Pedro de la Paz – Coronel – Lota:* Lunes, Miércoles y Viernes (`L-M-V`)[cite: 5].
+  * *Sector Penco – Lirquén:* Martes y Viernes[cite: 5].
+* **Restricciones de Flota (FOTON TM-3):**
+  * Capacidad máxima estricta de **1.600 kg** por camión[cite: 5, 78].
+  * Máximo de **30 paradas** por ruta asignada[cite: 5, 79].
+* **KPIs Operativos:**
+  * **Fill Rate:** Meta objetivo $\ge 98\%$[cite: 6].
+  * **Lead Time:** Meta objetivo $98\% - 100\%$ (cero pedidos rezagados)[cite: 6].
 
-Abre PowerShell como Administrador en Windows y ejecuta:
+---
 
-wsl --install -d Debian
+## Funcionalidades Implementadas
 
+1. **Gestión Multi-Rol (`/`, `/login/`, `/dashboard/`):**
+   * **Cliente (`/registro-cliente/`, `/panel-cliente/`):** Autoregistro con selección de coordenadas en mapa interactivo (Esri), creación de pedidos desde catálogo con stock en tiempo real, ventanas horarias y restricciones de entrega.
+   * **Administrador (`/panel-admin/`):** Gestión de catálogo y stock de productos, supervisión de pedidos en preventa, ejecución del motor GNN + ACO por zona/fecha, monitoreo de KPIs (*Fill Rate* y *Lead Time*), mapa OSRM multi-ruta (`/mapa/`) e historial de despachos (`/historial/`).
+   * **Conductor (`/panel-conductor/`):** Visualización exclusiva de su camión asignado, secuencia ordenada de paradas, restricciones del cliente y confirmación de entregas en terreno.
+2. **Hoja de Ruta Imprimible / PDF (`/ruta/imprimir/<camion_id>/`):**
+   * Documento limpio optimizado para impresión y exportación a PDF con resumen de carga, croquis de ruta trazada con OSRM, detalle de picking por parada y firmas de control[cite: 5].
+3. **Carga Masiva Estandarizada (`/carga-masiva/`):**
+   * Importación de clientes, ubicaciones y pedidos desde archivos Excel (`.xlsx`) o `.csv` con validación transaccional por fila y descarga de plantilla oficial (`/carga-masiva/plantilla/`).
 
-(Reinicia tu equipo si es necesario. Al abrir de nuevo, configura tu usuario y contraseña de Linux).
+---
 
-2. Instalar Dependencias del Sistema
+## Instalación y Puesta en Marcha (Linux / WSL)
 
-Abre VS Code, conéctate a WSL (Debian) y abre una nueva terminal de Linux. Ejecuta los siguientes comandos para actualizar el sistema e instalar Python, PostgreSQL y herramientas necesarias:
-
-sudo apt update
-sudo apt install postgresql postgresql-contrib python3-venv python3-dev libpq-dev build-essential git
-
-
-3. Clonar el Repositorio
-
-Descarga el código del proyecto desde GitHub y entra a la carpeta:
-
-git clone <TU_URL_DE_GITHUB_AQUI>
-cd sistema_reclutamiento
-
-
-(Nota: La carpeta raíz mantiene el nombre heredado de la base inicial).
-
-4. Configurar la Base de Datos (PostgreSQL)
-
-Ingresa a la consola de PostgreSQL:
-
-sudo -u postgres psql
-
-
-Dentro de la consola SQL, ejecuta línea por línea para crear la base de datos y otorgar permisos:
-
-CREATE DATABASE emporio_db;
-CREATE USER admin WITH PASSWORD '1234';
-ALTER ROLE admin SET client_encoding TO 'utf8';
-ALTER ROLE admin SET default_transaction_isolation TO 'read committed';
-ALTER ROLE admin SET timezone TO 'America/Santiago';
-GRANT ALL PRIVILEGES ON DATABASE emporio_db TO admin;
-\c emporio_db
-GRANT ALL ON SCHEMA public TO ragnarok_admin;
-\q
-
-
-5. Entorno Virtual e Instalación de Librerías
-
-Crea y activa el entorno virtual de Python. Luego instala Django y el conector de PostgreSQL:
-
+### 1. Clonar repositorio y activar entorno virtual
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd Proyecto_IA
 python3 -m venv venv
 source venv/bin/activate
-pip install django psycopg2
 
+2. Instalar dependencias
+Bash
+pip install django psycopg2-binary folium requests openpyxl
 
-(Nota: Si más adelante agregamos más librerías, asegúrate de usar pip install -r requirements.txt si existe).
+3. Configurar Base de Datos PostgreSQL
+Asegúrate de tener PostgreSQL activo y creada la base de datos configurada en sistema_reclutamiento/settings.py (emporio_db)[cite: 76]:
 
-6. Migraciones y Usuario Administrador
+Bash
+sudo service postgresql start
+python manage.py makemigrations
+python manage.py migrate
 
-Conecta el código a la base de datos creando las tablas y un usuario para acceder al panel web:
+4. Poblar datos iniciales (Opcional)
+Bash
+python manage.py seed_data
+python manage.py createsuperuser
 
-python3 manage.py migrate
-python3 manage.py createsuperuser
-
-
-(Sigue las instrucciones en pantalla para definir tu usuario, email y contraseña).
-
-7. Levantar el Servidor
-
-Finalmente, enciende el servidor local:
-
-python3 manage.py runserver
-
-
-Abre tu navegador y entra a http://localhost:8000/admin para comenzar a gestionar Clientes y Pedidos.
-
-Nota para el equipo: Recuerden siempre activar el entorno virtual (source venv/bin/activate) cada vez que abran una nueva terminal para trabajar en el proyecto.
+5. Ejecutar servidor de desarrollo
+Bash
+python manage.py runserver
+Accede en el navegador a: http://127.0.0.1:8000/
