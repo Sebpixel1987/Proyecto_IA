@@ -7,13 +7,63 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
+        :root {
+            --ea-red: #D62027;
+            --ea-red-hover: #B0171D;
+            --ea-dark: #111111;
+            --ea-dark-hover: #262626;
+            --ea-gold: #E5A93B;
+            --ea-gold-hover: #CC9228;
+            --ea-bg: #F7F5F2;
+        }
+
         body {
-            background-color: #f4f6f9;
+            background-color: var(--ea-bg);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ea-dark);
         }
+
         .navbar-emporio {
-            background-color: #0d233a;
+            background-color: var(--ea-dark) !important;
+            border-bottom: 3px solid var(--ea-red);
         }
+
+        .text-ea-gold { color: var(--ea-gold) !important; }
+        .text-ea-red { color: var(--ea-red) !important; }
+        .text-ea-dark { color: var(--ea-dark) !important; }
+
+        .badge-ea-gold { background-color: var(--ea-gold) !important; color: var(--ea-dark) !important; }
+        .badge-ea-red { background-color: var(--ea-red) !important; color: #FFFFFF !important; }
+        .badge-ea-dark { background-color: var(--ea-dark) !important; color: var(--ea-gold) !important; }
+
+        .btn-ea-red { background-color: var(--ea-red); color: #FFFFFF; border: 1px solid var(--ea-red); }
+        .btn-ea-red:hover { background-color: var(--ea-red-hover); color: #FFFFFF; border-color: var(--ea-red-hover); }
+
+        .btn-ea-outline-red { color: var(--ea-red); border: 1px solid var(--ea-red); background-color: transparent; }
+        .btn-ea-outline-red:hover { background-color: var(--ea-red); color: #FFFFFF; }
+
+        .btn-ea-gold { background-color: var(--ea-gold); color: var(--ea-dark); border: 1px solid var(--ea-gold); }
+        .btn-ea-gold:hover { background-color: var(--ea-gold-hover); color: var(--ea-dark); border-color: var(--ea-gold-hover); }
+
+        .btn-ea-outline-gold { color: var(--ea-gold); border: 1px solid var(--ea-gold); background-color: transparent; }
+        .btn-ea-outline-gold:hover { background-color: var(--ea-gold); color: var(--ea-dark); }
+
+        .btn-ea-dark { background-color: var(--ea-dark); color: var(--ea-gold); border: 1px solid var(--ea-dark); }
+        .btn-ea-dark:hover { background-color: var(--ea-dark-hover); color: #FFFFFF; }
+
+        .ea-icon-red { background-color: rgba(214, 32, 39, 0.12); color: var(--ea-red); }
+        .ea-icon-gold { background-color: rgba(229, 169, 59, 0.22); color: #B8801A; }
+        .ea-icon-dark { background-color: rgba(17, 17, 17, 0.1); color: var(--ea-dark); }
+
+        .ea-header-dark { background-color: var(--ea-dark) !important; color: #FFFFFF !important; border-bottom: 2px solid var(--ea-gold); }
+        .ea-border-gold { border-left: 5px solid var(--ea-gold) !important; }
+        .ea-border-dark { border-left: 5px solid var(--ea-dark) !important; }
+        .ea-border-red { border-left: 5px solid var(--ea-red) !important; }
+
+        .nav-tabs .nav-link { color: #555555; }
+        .nav-tabs .nav-link:hover { color: var(--ea-dark); }
+        .nav-tabs .nav-link.active { color: var(--ea-red) !important; border-bottom: 3px solid var(--ea-red) !important; }
+
         .card-hover {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -28,22 +78,22 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-emporio shadow-sm mb-4">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'home' %}">
-                <i class="fa-solid fa-route me-2 text-warning"></i>Emporio Alemán <span class="fw-light text-light opacity-75">| IAnts Lab USS</span>
+                <i class="fa-solid fa-route me-2 text-ea-gold"></i>Emporio Alemán <span class="fw-light text-light opacity-75"></span>
             </a>
             <div class="d-flex align-items-center gap-3">
                 {% if user.is_authenticated %}
                     <span class="text-white small">
-                        <i class="fa-solid fa-user-circle me-1 text-warning"></i>
+                        <i class="fa-solid fa-user-circle me-1 text-ea-gold"></i>
                         <strong>{{ user.first_name|default:user.username }}</strong>
                         {% if user.perfilusuario %}
-                            <span class="badge bg-warning text-dark ms-1">{{ user.perfilusuario.get_rol_display }}</span>
+                            <span class="badge badge-ea-gold ms-1">{{ user.perfilusuario.get_rol_display }}</span>
                         {% endif %}
                     </span>
-                    <a href="{% url 'logout_rol' %}" class="btn btn-outline-light btn-sm">
+                    <a href="{% url 'logout_rol' %}" class="btn btn-ea-outline-gold btn-sm">
                         <i class="fa-solid fa-right-from-bracket me-1"></i> Salir
                     </a>
                 {% else %}
-                    <a href="{% url 'login_rol' %}" class="btn btn-warning btn-sm fw-semibold">
+                    <a href="{% url 'login_rol' %}" class="btn btn-ea-gold btn-sm fw-semibold">
                         <i class="fa-solid fa-right-to-bracket me-1"></i> Iniciar Sesión
                     </a>
                 {% endif %}

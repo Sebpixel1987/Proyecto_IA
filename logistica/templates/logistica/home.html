@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="text-center py-4 mb-4">
-    <span class="badge bg-dark text-warning px-3 py-2 mb-2">Gran Concepción • Planta Chiguayante</span>
-    <h1 class="display-5 fw-bold text-dark">Sistema de Optimización de Última Milla</h1>
+    <span class="badge badge-ea-dark px-3 py-2 mb-2">Gran Concepción - Planta Chiguayante</span>
+    <h1 class="display-5 fw-bold text-ea-dark">Sistema de Optimización de Última Milla</h1>
     <p class="lead text-muted mx-auto" style="max-width: 720px;">
         Gestión integral de pedidos refrigerados, asignación inteligente de flota FOTON TM-3 (GNN + ACO) y hojas de ruta en terreno.
     </p>
@@ -17,19 +17,19 @@
         <div class="card h-100 border-0 shadow-sm card-hover">
             <div class="card-body p-4 d-flex flex-column text-center">
                 <div class="mb-3">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle" style="width: 70px; height: 70px;">
+                    <span class="d-inline-flex align-items-center justify-content-center ea-icon-red rounded-circle" style="width: 70px; height: 70px;">
                         <i class="fa-solid fa-store fa-2x"></i>
                     </span>
                 </div>
-                <h4 class="fw-bold">Portal Clientes</h4>
+                <h4 class="fw-bold text-ea-dark">Portal Clientes</h4>
                 <p class="text-muted small flex-grow-1">
                     Registra tu local comercial con tu ubicación en el Gran Concepción, solicita productos del catálogo e indica tus restricciones horarias de recepción.
                 </p>
                 <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'registro_cliente' %}" class="btn btn-success fw-semibold">
+                    <a href="{% url 'registro_cliente' %}" class="btn btn-ea-red fw-semibold">
                         <i class="fa-solid fa-user-plus me-1"></i> Registrarme como Cliente
                     </a>
-                    <a href="{% url 'login_rol' %}?rol=CLIENTE" class="btn btn-outline-success">
+                    <a href="{% url 'login_rol' %}?rol=CLIENTE" class="btn btn-ea-outline-red">
                         Ya tengo cuenta (Ingresar)
                     </a>
                 </div>
@@ -42,16 +42,16 @@
         <div class="card h-100 border-0 shadow-sm card-hover">
             <div class="card-body p-4 d-flex flex-column text-center">
                 <div class="mb-3">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle" style="width: 70px; height: 70px;">
+                    <span class="d-inline-flex align-items-center justify-content-center ea-icon-gold rounded-circle" style="width: 70px; height: 70px;">
                         <i class="fa-solid fa-truck-fast fa-2x"></i>
                     </span>
                 </div>
-                <h4 class="fw-bold">Portal Conductores</h4>
+                <h4 class="fw-bold text-ea-dark">Portal Conductores</h4>
                 <p class="text-muted small flex-grow-1">
                     Consulta exclusivamente la hoja de ruta optimizada para tu camión asignado, secuencia de paradas, restricciones del cliente y confirmación de entregas.
                 </p>
                 <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'login_rol' %}?rol=CONDUCTOR" class="btn btn-primary fw-semibold">
+                    <a href="{% url 'login_rol' %}?rol=CONDUCTOR" class="btn btn-ea-gold fw-semibold">
                         <i class="fa-solid fa-clipboard-list me-1"></i> Ver Mi Hoja de Ruta
                     </a>
                 </div>
@@ -64,16 +64,16 @@
         <div class="card h-100 border-0 shadow-sm card-hover">
             <div class="card-body p-4 d-flex flex-column text-center">
                 <div class="mb-3">
-                    <span class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-25 text-dark rounded-circle" style="width: 70px; height: 70px;">
+                    <span class="d-inline-flex align-items-center justify-content-center ea-icon-dark rounded-circle" style="width: 70px; height: 70px;">
                         <i class="fa-solid fa-microchip fa-2x"></i>
                     </span>
                 </div>
-                <h4 class="fw-bold">Administración y Despacho</h4>
+                <h4 class="fw-bold text-ea-dark">Administración y Despacho</h4>
                 <p class="text-muted small flex-grow-1">
                     Gestiona el catálogo y stock de productos, supervisa los pedidos entrantes y ejecuta el motor de optimización GNN + ACO para toda la flota.
                 </p>
                 <div class="d-grid gap-2 mt-3">
-                    <a href="{% url 'login_rol' %}?rol=ADMIN" class="btn btn-dark fw-semibold">
+                    <a href="{% url 'login_rol' %}?rol=ADMIN" class="btn btn-ea-dark fw-semibold">
                         <i class="fa-solid fa-shield-halved me-1"></i> Panel Logístico Admin
                     </a>
                 </div>

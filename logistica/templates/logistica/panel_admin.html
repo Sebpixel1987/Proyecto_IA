@@ -5,17 +5,17 @@
 {% block content %}
 <div class="row align-items-center mb-3">
     <div class="col-md-5">
-        <h2 class="fw-bold text-dark mb-0">Monitor Central de Despachos</h2>
-        <p class="text-muted mb-0 small">Motor GNN + ACO &bull; Flota FOTON TM-3 (Máx 1.600 kg / 30 paradas)</p>
+        <h2 class="fw-bold text-ea-dark mb-0">Monitor Central de Despachos</h2>
+        <p class="text-muted mb-0 small"></p>
     </div>
     <div class="col-md-7 text-md-end mt-3 mt-md-0">
-        <a href="{% url 'carga_masiva_datos' %}" class="btn btn-outline-primary shadow-sm me-1">
+        <a href="{% url 'carga_masiva_datos' %}" class="btn btn-ea-outline-red shadow-sm me-1">
             <i class="fa-solid fa-file-excel me-1"></i> Carga Masiva
         </a>
-        <a href="{% url 'mapa_rutas' %}" target="_blank" class="btn btn-success shadow-sm me-1">
+        <a href="{% url 'mapa_rutas' %}" target="_blank" class="btn btn-ea-gold shadow-sm me-1 fw-semibold">
             <i class="fa-solid fa-map-location-dot me-1"></i> Mapa OSRM
         </a>
-        <a href="{% url 'historial_rutas' %}" class="btn btn-dark shadow-sm">
+        <a href="{% url 'historial_rutas' %}" class="btn btn-ea-dark shadow-sm">
             <i class="fa-solid fa-history me-1"></i> Historial
         </a>
     </div>
@@ -29,7 +29,7 @@
             <input type="hidden" name="accion" value="optimizar">
             <div class="col-md-5">
                 <label class="form-label small fw-bold text-muted mb-1">
-                    <i class="fa-solid fa-map-pin text-danger me-1"></i> Zona / Frecuencia Operativa
+                    <i class="fa-solid fa-map-pin text-ea-red me-1"></i> Zona / Frecuencia Operativa
                 </label>
                 <select name="zona_operativa" class="form-select">
                     {% for codigo, info in zonas_operativas.items %}
@@ -44,8 +44,8 @@
                 <input type="date" name="fecha_despacho" class="form-control">
             </div>
             <div class="col-md-4 d-grid">
-                <button type="submit" class="btn btn-primary fw-bold shadow-sm">
-                    <i class="fa-solid fa-microchip me-1"></i> Ejecutar Optimización GNN + ACO
+                <button type="submit" class="btn btn-ea-red fw-bold shadow-sm">
+                    <i class="fa-solid fa-microchip me-1"></i> Generar Ruta
                 </button>
             </div>
         </form>
@@ -55,7 +55,7 @@
 <!-- MÉTRICAS Y KPIS OPERATIVOS -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm border-start border-warning border-5 h-100">
+        <div class="card border-0 shadow-sm ea-border-gold h-100">
             <div class="card-body">
                 <h6 class="text-muted text-uppercase fw-bold small">Pedidos en Preventa</h6>
                 <h2 class="fw-bold mb-0">{{ pedidos_pendientes|length }}</h2>
@@ -64,7 +64,7 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm border-start border-primary border-5 h-100">
+        <div class="card border-0 shadow-sm ea-border-dark h-100">
             <div class="card-body">
                 <h6 class="text-muted text-uppercase fw-bold small">Camiones en Ruta</h6>
                 <h2 class="fw-bold mb-0">{{ total_camiones_activos }}</h2>
@@ -73,19 +73,19 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm border-start {% if kpis.fill_rate >= 98 %}border-success{% else %}border-danger{% endif %} border-5 h-100">
+        <div class="card border-0 shadow-sm border-start {% if kpis.fill_rate >= 98 %}border-success{% else %}ea-border-red{% endif %} border-5 h-100">
             <div class="card-body">
                 <h6 class="text-muted text-uppercase fw-bold small">KPI Fill Rate</h6>
-                <h2 class="fw-bold mb-0 {% if kpis.fill_rate >= 98 %}text-success{% else %}text-danger{% endif %}">{{ kpis.fill_rate }}%</h2>
+                <h2 class="fw-bold mb-0 {% if kpis.fill_rate >= 98 %}text-success{% else %}text-ea-red{% endif %}">{{ kpis.fill_rate }}%</h2>
                 <small class="text-muted">Meta objetivo: &ge; 98%</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm border-start {% if kpis.lead_time >= 98 %}border-success{% else %}border-danger{% endif %} border-5 h-100">
+        <div class="card border-0 shadow-sm border-start {% if kpis.lead_time >= 98 %}border-success{% else %}ea-border-red{% endif %} border-5 h-100">
             <div class="card-body">
                 <h6 class="text-muted text-uppercase fw-bold small">KPI Lead Time</h6>
-                <h2 class="fw-bold mb-0 {% if kpis.lead_time >= 98 %}text-success{% else %}text-danger{% endif %}">{{ kpis.lead_time }}%</h2>
+                <h2 class="fw-bold mb-0 {% if kpis.lead_time >= 98 %}text-success{% else %}text-ea-red{% endif %}">{{ kpis.lead_time }}%</h2>
                 <small class="text-muted">Meta: 98%-100% (Rezagos: {{ kpis.pedidos_rezagados }})</small>
             </div>
         </div>
@@ -116,15 +116,15 @@
     <div class="tab-pane fade show active" id="rutas" role="tabpanel">
         {% for camion, info in rutas_por_camion.items %}
         <div class="card mb-4 shadow-sm border-0">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card-header ea-header-dark d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <h5 class="mb-0 d-inline"><i class="fa-solid fa-truck-fast me-2 text-warning"></i>Camión FOTON: {{ camion.patente }}</h5>
+                    <h5 class="mb-0 d-inline"><i class="fa-solid fa-truck-fast me-2 text-ea-gold"></i>Camión FOTON: {{ camion.patente }}</h5>
                     <span class="ms-3 small text-light">Conductor: <strong>{{ camion.conductor.usuario.username|default:"Sin asignar" }}</strong></span>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-info text-dark">{{ info.peso_total|floatformat:1 }} / {{ camion.capacidad_max_kg }} kg</span>
-                    <span class="badge bg-primary rounded-pill">{{ info.pedidos|length }} / 30 paradas</span>
-                    <a href="{% url 'hoja_ruta_imprimible' camion.id %}" target="_blank" class="btn btn-warning btn-sm fw-bold">
+                    <span class="badge bg-light text-dark">{{ info.peso_total|floatformat:1 }} / {{ camion.capacidad_max_kg }} kg</span>
+                    <span class="badge badge-ea-red rounded-pill">{{ info.pedidos|length }} / 30 paradas</span>
+                    <a href="{% url 'hoja_ruta_imprimible' camion.id %}" target="_blank" class="btn btn-ea-gold btn-sm fw-bold">
                         <i class="fa-solid fa-print me-1"></i> Hoja de Ruta (PDF)
                     </a>
                 </div>
@@ -144,7 +144,7 @@
                     <tbody>
                         {% for p in info.pedidos %}
                         <tr>
-                            <td class="text-center"><span class="badge bg-secondary">{{ p.orden_en_ruta }}</span></td>
+                            <td class="text-center"><span class="badge badge-ea-dark">{{ p.orden_en_ruta }}</span></td>
                             <td><strong>#{{ p.id }}</strong></td>
                             <td>{{ p.cliente }}</td>
                             <td>{{ p.ubicacion_entrega }}</td>
@@ -157,8 +157,8 @@
             </div>
         </div>
         {% empty %}
-        <div class="alert alert-info shadow-sm">
-            <i class="fa-solid fa-circle-info me-2"></i> No hay rutas asignadas actualmente. Ejecuta la optimización para procesar los pedidos entrantes.
+        <div class="alert alert-light border shadow-sm">
+            <i class="fa-solid fa-circle-info me-2 text-ea-red"></i> No hay rutas asignadas actualmente. Ejecuta la optimización para procesar los pedidos entrantes.
         </div>
         {% endfor %}
     </div>
@@ -168,7 +168,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                 <h5 class="mb-0 fw-bold">Pedidos Pendientes de Ruteo</h5>
-                <a href="{% url 'registrar_ubicacion_y_pedido' %}" class="btn btn-sm btn-outline-dark">
+                <a href="{% url 'registrar_ubicacion_y_pedido' %}" class="btn btn-sm btn-ea-outline-red">
                     <i class="fa-solid fa-plus me-1"></i> Ingreso Manual
                 </a>
             </div>
@@ -198,9 +198,9 @@
                                     <span class="text-muted">Sin detalle</span>
                                 {% endfor %}
                             </td>
-                            <td><span class="badge bg-secondary">{{ p.peso_total_kg }} kg</span></td>
+                            <td><span class="badge badge-ea-dark">{{ p.peso_total_kg }} kg</span></td>
                             <td>{{ p.fecha_entrega_esperada|date:"d/m/Y" }}</td>
-                            <td class="small text-danger">{{ p.observaciones|default:"—" }}</td>
+                            <td class="small text-ea-red">{{ p.observaciones|default:"—" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
@@ -218,8 +218,8 @@
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-dark text-white">
-                        <h6 class="mb-0"><i class="fa-solid fa-plus-circle me-2 text-warning"></i>Registrar Nuevo Producto</h6>
+                    <div class="card-header ea-header-dark">
+                        <h6 class="mb-0"><i class="fa-solid fa-plus-circle me-2 text-ea-gold"></i>Registrar Nuevo Producto</h6>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{% url 'crear_producto' %}">
@@ -237,7 +237,7 @@
                                 {{ producto_form.cantidad_disponible }}
                             </div>
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-success">Guardar Producto</button>
+                                <button type="submit" class="btn btn-ea-red fw-semibold">Guardar Producto</button>
                             </div>
                         </form>
                     </div>
@@ -265,7 +265,7 @@
                                     <td class="fw-semibold">{{ prod.nombre }}</td>
                                     <td>{{ prod.peso_kg }} kg</td>
                                     <td>
-                                        <span class="badge {% if prod.cantidad_disponible > 10 %}bg-success{% elif prod.cantidad_disponible > 0 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        <span class="badge {% if prod.cantidad_disponible > 10 %}bg-success{% elif prod.cantidad_disponible > 0 %}badge-ea-gold{% else %}badge-ea-red{% endif %}">
                                             {{ prod.cantidad_disponible }} un.
                                         </span>
                                     </td>
@@ -273,7 +273,7 @@
                                         <form method="POST" action="{% url 'actualizar_stock_producto' prod.id %}" class="d-flex gap-1">
                                             {% csrf_token %}
                                             <input type="number" name="cantidad_disponible" value="{{ prod.cantidad_disponible }}" min="0" class="form-control form-control-sm">
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">OK</button>
+                                            <button type="submit" class="btn btn-sm btn-ea-dark">OK</button>
                                         </form>
                                     </td>
                                 </tr>
