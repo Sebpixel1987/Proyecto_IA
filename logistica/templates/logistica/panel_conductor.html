@@ -1,108 +1,250 @@
 {% extends 'logistica/base.html' %}
 
-{% block title %}Hoja de Ruta Conductor - Emporio Alemán{% endblock %}
+{% block title %}Panel Conductor - Emporio Alemán{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h2 class="fw-bold mb-0"><i class="fa-solid fa-clipboard-check me-2 text-primary"></i>Mi Hoja de Ruta Asignada</h2>
-        <p class="text-muted mb-0">Origen y Retorno: Planta Emporio Alemán, Chiguayante</p>
+        <h3 class="fw-bold text-ea-dark mb-0">Mi Hoja de Ruta en Terreno</h3>
+        {% if camion %}
+            <span class="text-muted small">Vehículo asignado: <strong>FOTON {{ camion.patente }}</strong></span>
+        {% endif %}
     </div>
     {% if camion %}
     <div class="d-flex gap-2">
-        <a href="{% url 'hoja_ruta_imprimible' camion.id %}" target="_blank" class="btn btn-dark shadow-sm">
-            <i class="fa-solid fa-print me-1 text-warning"></i> Imprimir / PDF
+        <a href="{% url 'mapa_rutas' %}" target="_blank" class="btn btn-ea-gold btn-sm fw-bold">
+            <i class="fa-solid fa-map-location-dot me-1"></i> Ver Mapa
         </a>
-        <a href="{% url 'mapa_rutas' %}" target="_blank" class="btn btn-success shadow-sm">
-            <i class="fa-solid fa-map-location-dot me-1"></i> Ver Mi Ruta en Mapa
+        <a href="{% url 'hoja_ruta_imprimible' camion.id %}" target="_blank" class="btn btn-ea-dark btn-sm fw-bold">
+            <i class="fa-solid fa-print me-1"></i> Hoja Impresa
         </a>
     </div>
     {% endif %}
 </div>
 
 {% if not camion %}
-    <div class="alert alert-warning shadow-sm">
-        <i class="fa-solid fa-triangle-exclamation me-2"></i> No tienes un camión FOTON asignado en el sistema actualmente. Contacta a Logística.
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-2">
+                <i class="fa-solid fa-truck-arrow-right me-2 text-ea-red"></i>Selecciona tu Vehículo de Turno
+            </h5>
+            <p class="text-muted small mb-3">
+                Aún no tienes un camión asignado por despacho. Puedes tomar una unidad disponible para comenzar tu ruta:
+            </p>
+            {% if camiones_disponibles %}
+                <form method="POST" action="{% url 'seleccionar_camion_conductor' %}" class="row g-2 align-items-center" style="max-width: 480px;">
+                    {% csrf_token %}
+                    <div class="col-8">
+                        <select name="camion_id" class="form-select" required>
+                            <option value="" disabled selected>Elige camión disponible...</option>
+                            {% for c in camiones_disponibles %}
+                                <option value="{{ c.id }}">FOTON {{ c.patente }} ({{ c.capacidad_max_kg }} kg)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-4 d-grid">
+                        <button type="submit" class="btn btn-ea-gold fw-bold">Tomar Ruta</button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Todos los camiones registrados ya tienen conductor asignado. Solicita asignación al área de despacho.
+                </div>
+            {% endif %}
+        </div>
     </div>
 {% else %}
-    <!-- RESUMEN VEHÍCULO -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm bg-dark text-white">
-                <div class="card-body">
-                    <div class="small text-warning text-uppercase fw-bold">Vehículo Asignado</div>
-                    <h3 class="fw-bold mb-0">FOTON {{ camion.patente }}</h3>
-                </div>
+    <div class="row g-2 mb-4">
+        <div class="col-4">
+            <div class="card border-0 shadow-sm text-center p-2 ea-border-gold">
+                <small class="text-muted fw-bold">PENDIENTES</small>
+                <h4 class="fw-bold mb-0">{{ paradas|length }}</h4>
+                <small class="text-muted">{{ peso_carga_total|floatformat:1 }} kg</small>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="small text-muted text-uppercase fw-bold">Carga Total en Ruta</div>
-                    <h3 class="fw-bold mb-0">{{ peso_carga_total|floatformat:1 }} <small class="fs-6 text-muted">/ {{ camion.capacidad_max_kg }} kg</small></h3>
-                </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-sm text-center p-2 border-start border-success border-4">
+                <small class="text-muted fw-bold">ENTREGADOS</small>
+                <h4 class="fw-bold text-success mb-0">{{ entregados_hoy }}</h4>
+                <small class="text-muted">Hoy</small>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="small text-muted text-uppercase fw-bold">Paradas Pendientes / Entregadas Hoy</div>
-                    <h3 class="fw-bold mb-0">{{ paradas|length }} <small class="fs-6 text-success">({{ entregados_hoy }} entregadas)</small></h3>
+        <div class="col-4">
+            <div class="card border-0 shadow-sm text-center p-2 ea-border-red">
+                <small class="text-muted fw-bold">CON INCIDENCIA</small>
+                <h4 class="fw-bold text-ea-red mb-0">{{ no_entregados_hoy }}</h4>
+                <small class="text-muted">Hoy</small>
+            </div>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3"><i class="fa-solid fa-route me-2 text-ea-red"></i>Secuencia de Paradas Activas</h5>
+
+    {% for p in paradas %}
+    <div class="card shadow-sm border-0 mb-3 {% if p.estado == 'EN_PUNTO' %}border-start border-warning border-5{% endif %}">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+            <div>
+                <span class="badge badge-ea-dark fs-6 me-2">Parada #{{ p.orden_en_ruta }}</span>
+                <strong>Pedido #{{ p.id }}</strong>
+            </div>
+            <div>
+                {% if p.estado == 'EN_PUNTO' %}
+                    <span class="badge bg-warning text-dark">
+                        <i class="fa-solid fa-location-dot me-1"></i> En el punto ({{ p.hora_llegada|date:"H:i" }})
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">En tránsito</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="fw-bold mb-1">{{ p.cliente }}</h5>
+            <p class="mb-2 text-muted">
+                <i class="fa-solid fa-map-pin text-ea-red me-1"></i>
+                {{ p.ubicacion_entrega.direccion }}, {{ p.ubicacion_entrega.comuna }}
+            </p>
+
+            <div class="d-flex flex-wrap gap-3 small mb-2">
+                <span><strong>Carga:</strong> {{ p.peso_total_kg }} kg</span>
+                {% if p.cliente.telefono %}
+                    <span><strong>Tel:</strong> <a href="tel:{{ p.cliente.telefono }}">{{ p.cliente.telefono }}</a></span>
+                {% endif %}
+                {% if p.cliente.ventana_horaria_inicio and p.cliente.ventana_horaria_fin %}
+                    <span><strong>Horario:</strong> {{ p.cliente.ventana_horaria_inicio|time:"H:i" }} - {{ p.cliente.ventana_horaria_fin|time:"H:i" }}</span>
+                {% endif %}
+            </div>
+
+            {% if p.observaciones %}
+            <div class="alert alert-warning py-2 px-3 small mb-3">
+                <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Nota cliente:</strong> {{ p.observaciones }}
+            </div>
+            {% endif %}
+
+            <div class="bg-light rounded p-2 mb-3 small">
+                <strong>Productos a descargar:</strong>
+                <ul class="mb-0 ps-3">
+                    {% for d in p.detalles.all %}
+                        <li>{{ d.cantidad }}x {{ d.producto.nombre }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="d-grid gap-2">
+                {% if p.estado == 'EN_RUTA' %}
+                <form method="POST" action="{% url 'registrar_llegada_punto' p.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-ea-gold w-100 fw-bold py-2">
+                        <i class="fa-solid fa-flag-checkered me-1"></i> 1. Llegué al Punto (Marcar Hora)
+                    </button>
+                </form>
+                {% endif %}
+
+                <div class="row g-2">
+                    <div class="col-7">
+                        <button type="button" class="btn btn-success w-100 fw-bold py-2" data-bs-toggle="modal" data-bs-target="#modalEntregado{{ p.id }}">
+                            <i class="fa-solid fa-check-circle me-1"></i> Entregado
+                        </button>
+                    </div>
+                    <div class="col-5">
+                        <button type="button" class="btn btn-outline-danger w-100 fw-bold py-2" data-bs-toggle="modal" data-bs-target="#modalNoEntregado{{ p.id }}">
+                            <i class="fa-solid fa-times-circle me-1"></i> No Entregado
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SECUENCIA DE PARADAS -->
-    {% for p in paradas %}
-    <div class="card border-0 shadow-sm mb-3 border-start border-primary border-5">
-        <div class="card-body">
-            <div class="row align-items-center">
-                <div class="col-md-1 text-center mb-2 mb-md-0">
-                    <span class="badge bg-primary rounded-circle fs-5 p-3">#{{ p.orden_en_ruta }}</span>
-                </div>
-                <div class="col-md-7">
-                    <h5 class="fw-bold mb-1">
-                        Pedido #{{ p.id }} — {{ p.cliente }}
-                        <span class="badge bg-light text-dark border ms-2">{{ p.peso_total_kg }} kg</span>
-                    </h5>
-                    <p class="mb-1 text-dark">
-                        <i class="fa-solid fa-location-dot text-danger me-1"></i>
-                        <strong>{{ p.ubicacion_entrega }}</strong>
-                    </p>
-                    <p class="small text-muted mb-1">
-                        <i class="fa-solid fa-phone me-1"></i> Tel: {{ p.cliente.telefono }}
-                        {% if p.cliente.ventana_horaria_inicio and p.cliente.ventana_horaria_fin %}
-                            &bull; <i class="fa-regular fa-clock me-1"></i> Ventana: {{ p.cliente.ventana_horaria_inicio|time:"H:i" }} a {{ p.cliente.ventana_horaria_fin|time:"H:i" }}
-                        {% endif %}
-                    </p>
-                    <div class="small mb-1">
-                        <strong>Carga a descargar:</strong>
-                        {% for d in p.detalles.all %}
-                            <span class="badge bg-secondary">{{ d.cantidad }}x {{ d.producto.nombre }}</span>
-                        {% endfor %}
+    <div class="modal fade" id="modalEntregado{{ p.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'marcar_pedido_entregado' p.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Confirmar Entrega - Pedido #{{ p.id }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    {% if p.observaciones %}
-                    <div class="alert alert-warning py-1 px-2 small mb-0 mt-2">
-                        <i class="fa-solid fa-circle-exclamation me-1"></i> <strong>Restricción:</strong> {{ p.observaciones }}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre de quien recibe (opcional)</label>
+                            <input type="text" name="receptor_entrega" class="form-control" placeholder="Ej: Juan Pérez / Encargado bodega">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Observación del conductor (opcional)</label>
+                            <textarea name="observacion_conductor" rows="2" class="form-control" placeholder="Ej: Entrega sin novedades"></textarea>
+                        </div>
                     </div>
-                    {% endif %}
-                </div>
-                <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <form method="POST" action="{% url 'marcar_pedido_entregado' p.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-lg w-100">
-                            <i class="fa-solid fa-check-double me-1"></i> Confirmar Entrega
-                        </button>
-                    </form>
-                </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success fw-bold">Generar Comprobante</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNoEntregado{{ p.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form method="POST" action="{% url 'marcar_pedido_no_entregado' p.id %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">Registrar Incidencia - Pedido #{{ p.id }}</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Motivo de no entrega *</label>
+                            <select name="motivo_no_entrega" class="form-select" required>
+                                <option value="" disabled selected>Selecciona un motivo...</option>
+                                {% for motivo in motivos_no_entrega %}
+                                    <option value="{{ motivo }}">{{ motivo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Detalle adicional</label>
+                            <textarea name="observacion_conductor" rows="2" class="form-control" placeholder="Describe brevemente lo ocurrido en el punto"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger fw-bold">Registrar No Entrega</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
     {% empty %}
     <div class="alert alert-success shadow-sm">
-        <i class="fa-solid fa-flag-checkered me-2"></i> No tienes paradas pendientes en ruta en este momento.
+        <i class="fa-solid fa-circle-check me-2"></i> No tienes paradas pendientes en tu ruta actual.
     </div>
     {% endfor %}
+
+    {% if historial_hoy %}
+    <h5 class="fw-bold mt-4 mb-3"><i class="fa-solid fa-file-signature me-2 text-ea-dark"></i>Comprobantes Generados Hoy</h5>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="list-group list-group-flush">
+            {% for h in historial_hoy %}
+            <div class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <strong>Pedido #{{ h.id }}</strong> — {{ h.cliente }}
+                    <div class="small text-muted">
+                        Cierre: {{ h.hora_cierre_entrega|date:"H:i" }} hrs |
+                        {% if h.estado == 'ENTREGADO' %}
+                            <span class="text-success fw-semibold">Entregado</span>
+                        {% else %}
+                            <span class="text-danger fw-semibold">No Entregado ({{ h.motivo_no_entrega }})</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <a href="{% url 'comprobante_entrega_pedido' h.id %}" class="btn btn-sm btn-outline-dark">
+                    <i class="fa-solid fa-receipt me-1"></i> Ver Comprobante
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 {% endif %}
 {% endblock %}

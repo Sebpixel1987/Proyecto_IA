@@ -3,28 +3,27 @@
 {% block title %}Carga Masiva Excel / CSV - Emporio Alemán{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <div>
         <h2 class="fw-bold mb-0"><i class="fa-solid fa-file-excel text-success me-2"></i>Carga Masiva de Pedidos y Clientes</h2>
-        <p class="text-muted mb-0">Importación estandarizada desde archivos Excel (<code>.xlsx</code>) o <code>.csv</code> hacia Preventa</p>
+        <p class="text-muted mb-0">Importación estandarizada desde planillas Excel (<code>.xlsx</code>) o <code>.csv</code> hacia Preventa</p>
     </div>
     <a href="{% url 'panel_admin' %}" class="btn btn-outline-secondary">
         <i class="fa-solid fa-arrow-left me-1"></i> Volver al Panel Admin
     </a>
 </div>
 
-<div class="row g-4 mb-5">
-    <!-- PASO 1: DESCARGAR PLANTILLA -->
+<div class="row g-4 mb-4">
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-dark text-white py-3">
-                <h5 class="mb-0"><i class="fa-solid fa-download me-2 text-warning"></i>1. Descargar Plantilla Oficial</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-download me-2 text-warning"></i>1. Plantilla Oficial de Planta</h5>
             </div>
             <div class="card-body d-flex flex-column">
                 <p class="small text-muted">
-                    Utiliza nuestra plantilla estandarizada para evitar errores de formato. Incluye ejemplos con coordenadas reales del Gran Concepción y agrupación automática de múltiples productos por pedido.
+                    Descarga el formato base de importación. El sistema agrupa automáticamente los ítems de un mismo cliente y fecha en un único pedido y verifica que las coordenadas correspondan a la comuna declarada.
                 </p>
-                <div class="d-grid gap-2 mb-4">
+                <div class="d-grid gap-2 mb-3">
                     <a href="{% url 'descargar_plantilla_carga' %}?formato=xlsx" class="btn btn-success fw-semibold">
                         <i class="fa-solid fa-file-excel me-2"></i> Descargar Plantilla Excel (.xlsx)
                     </a>
@@ -33,37 +32,41 @@
                     </a>
                 </div>
 
-                <h6 class="fw-bold small text-uppercase text-muted border-bottom pb-1">Columnas requeridas en el archivo:</h6>
-                <div class="small text-muted" style="max-height: 220px; overflow-y: auto;">
+                <div class="alert alert-light border py-2 px-3 small mb-3">
+                    <i class="fa-solid fa-shield-halved text-primary me-1"></i>
+                    <strong>Control de Calidad Activo:</strong> Si una fila declara una comuna distinta a la ubicación GPS de <code>latitud</code> y <code>longitud</code>, la importación detiene el guardado e indica la fila exacta a corregir.
+                </div>
+
+                <h6 class="fw-bold small text-uppercase text-muted border-bottom pb-1">Estructura de columnas requeridas:</h6>
+                <div class="small text-muted" style="max-height: 210px; overflow-y: auto;">
                     <ul class="ps-3 mb-0">
-                        <li><code>cliente_usuario</code>: Identificador único del local (si es nuevo se crea con clave <code>1234</code>).</li>
-                        <li><code>nombre_local</code>: Razón social o nombre comercial.</li>
-                        <li><code>telefono</code>: Número de contacto.</li>
-                        <li><code>direccion</code> y <code>comuna</code>: Punto de descarga.</li>
-                        <li><code>latitud</code> y <code>longitud</code>: Coordenadas decimales (ej: <code>-36.8269</code>, <code>-73.0498</code>).</li>
-                        <li><code>fecha_entrega</code>: Formato <code>AAAA-MM-DD</code>.</li>
-                        <li><code>ventana_inicio</code> / <code>ventana_fin</code>: Horario <code>HH:MM</code> (opcional).</li>
-                        <li><code>producto</code>, <code>peso_unitario_kg</code>, <code>cantidad</code>: Detalle de carga.</li>
-                        <li><code>observaciones</code>: Restricciones de entrega (opcional).</li>
+                        <li><code>cliente_usuario</code>: Código único o usuario del local (clave inicial <code>1234</code> si es nuevo).</li>
+                        <li><code>nombre_local</code>: Razón social o nombre comercial del cliente.</li>
+                        <li><code>telefono</code>: Teléfono de contacto en recepción.</li>
+                        <li><code>direccion</code> y <code>comuna</code>: Punto exacto de entrega en Gran Concepción.</li>
+                        <li><code>latitud</code> y <code>longitud</code>: Coordenadas decimales coherentes con la comuna.</li>
+                        <li><code>fecha_entrega</code>: Formato <code>AAAA-MM-DD</code> o <code>DD/MM/AAAA</code>.</li>
+                        <li><code>ventana_inicio</code> / <code>ventana_fin</code>: Franja horaria <code>HH:MM</code> (opcional).</li>
+                        <li><code>producto</code>, <code>peso_unitario_kg</code>, <code>cantidad</code>: SKU/descripción, kilos por unidad y cajas.</li>
+                        <li><code>observaciones</code>: Indicaciones de acceso o descarga (opcional).</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PASO 2: SUBIR ARCHIVO -->
     <div class="col-lg-7">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-primary text-white py-3">
-                <h5 class="mb-0"><i class="fa-solid fa-cloud-arrow-up me-2"></i>2. Subir Archivo de Datos Externos</h5>
+                <h5 class="mb-0"><i class="fa-solid fa-cloud-arrow-up me-2"></i>2. Subir Planilla de Preventa</h5>
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="border border-2 border-dashed rounded p-4 text-center bg-light mb-3">
                         <i class="fa-solid fa-table fa-3x text-primary mb-2"></i>
-                        <h6 class="fw-bold">Selecciona tu planilla Excel (.xlsx) o CSV</h6>
-                        <p class="small text-muted mb-3">Si varias filas tienen el mismo <code>cliente_usuario</code> y <code>fecha_entrega</code>, se agruparán automáticamente en un solo pedido.</p>
+                        <h6 class="fw-bold">Selecciona el archivo Excel (.xlsx) o CSV (.csv)</h6>
+                        <p class="small text-muted mb-3">Soporta encabezados estándar y alias habituales de exportación comercial (ej. <code>razon_social</code>, <code>kilos</code>, <code>cajas</code>, <code>fecha_despacho</code>).</p>
                         <input type="file" name="archivo_datos" accept=".xlsx,.csv" class="form-control" required>
                     </div>
                     <div class="d-grid">
@@ -82,7 +85,7 @@
                         <li><strong>Clientes nuevos registrados:</strong> {{ resumen_importacion.clientes_creados }}</li>
                     </ul>
                     <a href="{% url 'panel_admin' %}" class="btn btn-sm btn-success fw-bold">
-                        Ir al Panel Admin y Optimizar Flota &rarr;
+                        Ir al Panel Admin y Planificar Rutas &rarr;
                     </a>
                 </div>
                 {% endif %}
@@ -97,6 +100,60 @@
                     </ul>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GUÍA DE HOMOLOGACIÓN PARA EXPORTACIÓN REAL DE PLANTA -->
+<div class="card border-0 shadow-sm mb-5">
+    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+        <span class="fw-bold small text-uppercase text-muted">
+            <i class="fa-solid fa-sliders me-1 text-primary"></i> Homologación Rápida con Planilla Comercial de Planta
+        </span>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tablaHomologacion">
+            Ver Equivalencias
+        </button>
+    </div>
+    <div class="collapse" id="tablaHomologacion">
+        <div class="card-body pt-2">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Campo del Sistema</th>
+                            <th>Encabezados Alternativos Aceptados</th>
+                            <th>Origen Habitual en Planta</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>cliente_usuario</code></td>
+                            <td><code>codigo_cliente</code>, <code>rut_cliente</code>, <code>cod_cliente</code></td>
+                            <td>Maestro de clientes / Preventa</td>
+                        </tr>
+                        <tr>
+                            <td><code>nombre_local</code></td>
+                            <td><code>razon_social</code>, <code>cliente</code>, <code>nombre_cliente</code></td>
+                            <td>Ficha comercial del punto de venta</td>
+                        </tr>
+                        <tr>
+                            <td><code>direccion</code> / <code>comuna</code></td>
+                            <td><code>direccion_entrega</code>, <code>domicilio</code> / <code>ciudad</code></td>
+                            <td>Guía de despacho / Ruta maestra</td>
+                        </tr>
+                        <tr>
+                            <td><code>producto</code> / <code>peso_unitario_kg</code> / <code>cantidad</code></td>
+                            <td><code>descripcion</code>, <code>sku</code> / <code>peso_kg</code>, <code>kilos</code> / <code>cajas</code>, <code>unidades</code></td>
+                            <td>Detalle de nota de venta / Picking</td>
+                        </tr>
+                        <tr>
+                            <td><code>fecha_entrega</code></td>
+                            <td><code>fecha_despacho</code>, <code>fecha</code></td>
+                            <td>Programación diaria de reparto</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

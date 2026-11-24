@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from .models import Ubicacion, Pedido, Producto, Cliente, PerfilUsuario
+from .utils import validar_coordenadas_comuna
 
 COMUNAS_GRAN_CONCEPCION = [
     ('Concepción', 'Concepción'),
@@ -10,6 +11,7 @@ COMUNAS_GRAN_CONCEPCION = [
     ('Coronel', 'Coronel'),
     ('Chiguayante', 'Chiguayante'),
     ('Penco', 'Penco'),
+    ('Lirquén', 'Lirquén'),
     ('Lota', 'Lota'),
 ]
 
@@ -28,6 +30,18 @@ class UbicacionForm(forms.ModelForm):
             'latitud': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any', 'id': 'id_latitud'}),
             'longitud': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any', 'id': 'id_longitud'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        comuna = cleaned_data.get('comuna')
+        latitud = cleaned_data.get('latitud')
+        longitud = cleaned_data.get('longitud')
+
+        es_valido, error_geo = validar_coordenadas_comuna(comuna, latitud, longitud)
+        if not es_valido:
+            raise forms.ValidationError(error_geo)
+
+        return cleaned_data
 
 
 class PedidoExternoForm(forms.ModelForm):
@@ -105,6 +119,23 @@ class RegistroClienteForm(forms.Form):
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("Este nombre de usuario ya está registrado.")
         return username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        comuna = cleaned_data.get('comuna')
+        latitud = cleaned_data.get('latitud')
+        longitud = cleaned_data.get('longitud')
+        v_inicio = cleaned_data.get('ventana_horaria_inicio')
+        v_fin = cleaned_data.get('ventana_horaria_fin')
+
+        es_valido, error_geo = validar_coordenadas_comuna(comuna, latitud, longitud)
+        if not es_valido:
+            raise forms.ValidationError(error_geo)
+
+        if v_inicio and v_fin and v_fin <= v_inicio:
+            raise forms.ValidationError("La hora de término de recepción debe ser posterior a la hora de inicio.")
+
+        return cleaned_data
 
 
 class ProductoForm(forms.ModelForm):

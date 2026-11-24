@@ -31,4 +31,20 @@ urlpatterns = [
     path('historial/', views.historial_rutas, name='historial_rutas'),
     path('historial/<int:pk>/', views.detalle_ruta_historica, name='detalle_ruta_historica'),
     path('datos/nuevo/', views.registrar_ubicacion_y_pedido, name='registrar_ubicacion_y_pedido'),
+
+    #Manejo de pedidos en la ruta
+    path('ruta/pedido/<int:pedido_id>/mover/<str:direccion>/', views.mover_parada_ruta, name='mover_parada_ruta'),
+    path('ruta/pedido/<int:pedido_id>/reasignar/', views.reasignar_pedido_camion, name='reasignar_pedido_camion'),
+    path('ruta/pedido/<int:pedido_id>/preventa/', views.devolver_pedido_preventa, name='devolver_pedido_preventa'),
+
+    #Marcar pedido
+    path('conductor/pedido/<int:pedido_id>/llegada/', views.registrar_llegada_punto, name='registrar_llegada_punto'),
+    path('conductor/pedido/<int:pedido_id>/no-entregado/', views.marcar_pedido_no_entregado, name='marcar_pedido_no_entregado'),
+    path('comprobante/pedido/<int:pedido_id>/', views.comprobante_entrega_pedido, name='comprobante_entrega_pedido'),
+
+    # Gestión de flota y conductores
+    path('flota/camion/crear/', views.crear_camion, name='crear_camion'),
+    path('flota/camion/<int:camion_id>/asignar-conductor/', views.asignar_conductor_camion, name='asignar_conductor_camion'),
+    path('flota/conductor/crear/', views.crear_conductor, name='crear_conductor'),
+    path('conductor/seleccionar-camion/', views.seleccionar_camion_conductor, name='seleccionar_camion_conductor'),
 ]

@@ -5,8 +5,9 @@ from logistica.models import PerfilUsuario, Ubicacion, Cliente, Producto, Camion
 from django.utils import timezone
 from datetime import timedelta
 
+
 class Command(BaseCommand):
-    help = 'Puebla la base de datos de Emporio Alemán con datos de prueba para optimización de rutas'
+    help = 'Puebla la base de datos de Emporio Alemán con datos de prueba para planificación de rutas'
 
     def handle(self, *args, **kwargs):
         self.stdout.write("Limpiando base de datos...")
@@ -16,14 +17,48 @@ class Command(BaseCommand):
         Producto.objects.all().delete()
         Cliente.objects.all().delete()
         Ubicacion.objects.all().delete()
-        # Limpiar usuarios generados en pruebas anteriores para evitar errores de duplicidad
         User.objects.filter(perfilusuario__rol='CLIENTE').delete()
-        
-        # 1. Crear Flota de Camiones (2 propios, 3 arrendados, 1.600 kg)
-        self.stdout.write("Creando flota de camiones...")
-        flota = ['FOTON-01', 'FOTON-02', 'EXT-01', 'EXT-02', 'EXT-03']
-        for patente in flota:
-            Camion.objects.create(patente=patente, capacidad_max_kg=1600.00)
+
+        # 1. Crear Conductores y Flota de Camiones (2 propios, 3 arrendados, 1.600 kg)
+        self.stdout.write("Creando conductores y flota de camiones...")
+        conductores_data = [
+            ('conductor_1', 'Carlos', 'Mendoza'),
+            ('conductor_2', 'Luis', 'Rojas'),
+            ('conductor_3', 'Pedro', 'Silva'),
+            ('conductor_4', 'Jorge', 'Muñoz'),
+            ('conductor_5', 'Andrés', 'Castro'),
+        ]
+
+        perfiles_conductores = []
+        for username, first_name, last_name in conductores_data:
+            user, _ = User.objects.get_or_create(
+                username=username,
+                defaults={'first_name': first_name, 'last_name': last_name}
+            )
+            user.first_name = first_name
+            user.last_name = last_name
+            user.set_password('1234')
+            user.save()
+
+            perfil, _ = PerfilUsuario.objects.update_or_create(
+                usuario=user,
+                defaults={'rol': 'CONDUCTOR'}
+            )
+            perfiles_conductores.append(perfil)
+
+        flota = [
+            ('FOTON-01', perfiles_conductores[0]),
+            ('FOTON-02', perfiles_conductores[1]),
+            ('EXT-01', perfiles_conductores[2]),
+            ('EXT-02', perfiles_conductores[3]),
+            ('EXT-03', None),
+        ]
+        for patente, perfil_conductor in flota:
+            Camion.objects.create(
+                patente=patente,
+                capacidad_max_kg=1600.00,
+                conductor=perfil_conductor
+            )
 
         # 2. Crear Productos (Basado en lista de picking)
         self.stdout.write("Creando catálogo de productos...")
@@ -40,8 +75,6 @@ class Command(BaseCommand):
 
         # 3. Crear Ubicaciones y Clientes Reales (Gran Concepción - Coronel)
         self.stdout.write("Generando clientes en ubicaciones reales...")
-        
-        # Puntos reales estratégicos para Emporio Alemán
         coordenadas_reales = [
             (-37.0256, -73.1365, "Coronel", "Plaza de Armas Coronel"),
             (-36.9939, -73.1384, "Coronel", "Lagunillas Sector 3"),
@@ -59,24 +92,23 @@ class Command(BaseCommand):
             (-36.7698, -73.0645, "Talcahuano", "Brisas del Sol"),
             (-36.8040, -73.0390, "Concepción", "Barrio Norte")
         ]
-        
+
         clientes_db = []
-        for i in range(35): # 35 clientes obligan a usar más de 1 camión
+        for i in range(35):
             lat, lon, comuna, direccion = coordenadas_reales[i % len(coordenadas_reales)]
-            # Ligera variación decimal para evitar empalmes si se repite la ubicación
-            lat += random.uniform(-0.002, 0.002) 
+            lat += random.uniform(-0.002, 0.002)
             lon += random.uniform(-0.002, 0.002)
-            
+
             ubicacion = Ubicacion.objects.create(
-                direccion=direccion, 
-                comuna=comuna, 
-                latitud=round(lat, 6), 
+                direccion=direccion,
+                comuna=comuna,
+                latitud=round(lat, 6),
                 longitud=round(lon, 6)
             )
-            
+
             user = User.objects.create_user(username=f"cliente_real_{i}", password="password123")
             perfil = PerfilUsuario.objects.create(usuario=user, rol='CLIENTE')
-            
+
             cliente = Cliente.objects.create(
                 perfil=perfil,
                 ubicacion_principal=ubicacion,
@@ -87,22 +119,25 @@ class Command(BaseCommand):
             clientes_db.append(cliente)
 
         # 4. Generar Pedidos Masivos
-        self.stdout.write("Simulando pedidos para estresar el motor de ruteo...")
+        self.stdout.write("Simulando pedidos para el motor de ruteo...")
         fecha_entrega = timezone.now().date() + timedelta(days=1)
-        
+
         for cliente in clientes_db:
             pedido = Pedido.objects.create(
-                cliente=cliente, 
+                cliente=cliente,
                 ubicacion_entrega=cliente.ubicacion_principal,
                 estado='PREVENTA',
                 fecha_entrega_esperada=fecha_entrega
             )
-            
-            # Asignar cajas para forzar el volumen de carga y emular la densidad operativa
+
             num_lineas = random.randint(1, 4)
             for _ in range(num_lineas):
                 producto = random.choice(productos_db)
                 cantidad = random.randint(1, 5)
                 DetallePedido.objects.create(pedido=pedido, producto=producto, cantidad=cantidad)
 
-        self.stdout.write(self.style.SUCCESS("¡Base de datos poblada exitosamente! Se inyectaron 40 pedidos y 5 camiones."))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"¡Base de datos poblada exitosamente! Se inyectaron {len(clientes_db)} pedidos, 5 camiones y 5 conductores (clave: 1234)."
+            )
+        )

@@ -71,7 +71,10 @@ class Pedido(models.Model):
         ('PREVENTA', 'Preventa (Ingresado)'),
         ('PREPARADO', 'Preparado (Picking)'),
         ('EN_RUTA', 'En Ruta'),
+        ('EN_PUNTO', 'En Punto de Entrega'),
         ('ENTREGADO', 'Entregado'),
+        ('NO_ENTREGADO', 'No Entregado'),
+        ('CANCELADO', 'Cancelado'),
     )
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     ubicacion_entrega = models.ForeignKey(Ubicacion, on_delete=models.PROTECT)
@@ -87,7 +90,34 @@ class Pedido(models.Model):
     orden_en_ruta = models.IntegerField(
         null=True,
         blank=True,
-        help_text="Posición calculada por el algoritmo de última milla"
+        help_text="Posición calculada en la secuencia de reparto"
+    )
+    hora_llegada = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Hora de Llegada al Punto"
+    )
+    hora_cierre_entrega = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Hora de Cierre de Gestión"
+    )
+    receptor_entrega = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name="Persona que Recibe"
+    )
+    motivo_no_entrega = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name="Motivo de No Entrega"
+    )
+    observacion_conductor = models.TextField(
+        blank=True,
+        default='',
+        verbose_name="Observación en Terreno"
     )
 
     @property
@@ -123,7 +153,7 @@ class RutaHistorica(models.Model):
     distancia_total_km = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Distancia Total (km)")
     tiempo_estimado_min = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Tiempo Estimado (min)")
     pedidos_incluidos = models.ManyToManyField(Pedido, blank=True, verbose_name="Pedidos en la Ruta")
-    geometria_osrm = models.JSONField(null=True, blank=True, verbose_name="Trazado OSRM (GeoJSON)")
+    geometria_osrm = models.JSONField(null=True, blank=True, verbose_name="Trazado Vial (GeoJSON)")
 
     def __str__(self):
         patente = self.camion.patente if self.camion else "Sin Camión"

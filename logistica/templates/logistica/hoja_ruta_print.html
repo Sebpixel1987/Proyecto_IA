@@ -3,47 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hoja de Ruta - Camión {{ camion.patente }} | Emporio Alemán</title>
+    <title>Hoja de Ruta Oficial - Camión {{ camion.patente }} | Emporio Alemán</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
+        :root {
+            --ea-dark: #141e27;
+            --ea-red: #b71c1c;
+            --ea-gold: #f5b400;
+            --ea-border: #2c3e50;
+        }
         body {
             background-color: #e9ecef;
             font-family: 'Segoe UI', Arial, sans-serif;
             color: #111;
-            font-size: 13px;
+            font-size: 12.5px;
         }
         .hoja-documento {
             background: #ffffff;
-            max-width: 1050px;
+            max-width: 1080px;
             margin: 20px auto;
-            padding: 32px 36px;
+            padding: 28px 32px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
             border-radius: 4px;
         }
-        .header-box {
-            border-bottom: 2px solid #111;
-            padding-bottom: 12px;
-            margin-bottom: 14px;
+        .header-oficial {
+            border: 1.5px solid var(--ea-border);
+            margin-bottom: 12px;
+        }
+        .header-brand {
+            background-color: var(--ea-dark);
+            color: #ffffff;
+            padding: 10px 14px;
+        }
+        .header-folio {
+            background-color: #f8f9fa;
+            border-left: 1.5px solid var(--ea-border);
+            padding: 8px 12px;
+            font-size: 11.5px;
         }
         .meta-grid {
-            border: 1px solid #333;
+            border: 1px solid var(--ea-border);
             background-color: #f8f9fa;
-            padding: 10px 14px;
-            margin-bottom: 14px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+        .control-planta-strip {
+            border: 1px solid var(--ea-border);
+            background-color: #fffdf5;
+            padding: 7px 12px;
+            margin-bottom: 12px;
+            font-size: 11.5px;
         }
         .mapa-contenedor {
-            border: 1.5px solid #222;
-            margin-bottom: 16px;
+            border: 1.5px solid var(--ea-border);
+            margin-bottom: 14px;
             position: relative;
         }
         #mapa-hoja-ruta {
-            height: 310px;
+            height: 290px;
             width: 100%;
         }
         .marcador-numero {
-            background-color: #0d6efd;
+            background-color: var(--ea-red);
             color: #ffffff;
             border: 2px solid #ffffff;
             border-radius: 50%;
@@ -54,9 +77,9 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.45);
         }
         .marcador-planta {
-            background-color: #111111;
-            color: #ffc107;
-            border: 2px solid #ffc107;
+            background-color: var(--ea-dark);
+            color: var(--ea-gold);
+            border: 2px solid var(--ea-gold);
             border-radius: 50%;
             font-weight: bold;
             font-size: 12px;
@@ -65,44 +88,44 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         .tabla-ruta th {
-            background-color: #1a252f !important;
+            background-color: var(--ea-dark) !important;
             color: #ffffff !important;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             border: 1px solid #111;
             vertical-align: middle;
+            padding: 6px;
         }
         .tabla-ruta td {
             border: 1px solid #444;
             vertical-align: top;
-            padding: 7px 8px;
+            padding: 6px 7px;
         }
         .check-box-print {
             display: inline-block;
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             border: 1.5px solid #111;
             margin-top: 2px;
         }
         .firma-linea {
             border-top: 1px solid #111;
-            margin-top: 45px;
+            margin-top: 40px;
             padding-top: 4px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11.5px;
         }
 
-        /* Estilos exclusivos al imprimir o exportar a PDF */
         @media print {
             @page {
                 size: letter portrait;
-                margin: 9mm;
+                margin: 8mm;
             }
             body {
                 background: #ffffff !important;
                 margin: 0;
                 padding: 0;
-                font-size: 11px;
+                font-size: 10.5px;
             }
             .no-print {
                 display: none !important;
@@ -114,24 +137,13 @@
                 max-width: 100% !important;
             }
             #mapa-hoja-ruta {
-                height: 250px !important;
+                height: 235px !important;
             }
-            .marcador-numero, .marcador-planta {
+            .header-brand, .marcador-numero, .marcador-planta, .tabla-ruta th, .meta-grid, .control-planta-strip {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            .tabla-ruta th {
-                background-color: #222 !important;
-                color: #fff !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .meta-grid {
-                background-color: #f4f4f4 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            tr, .mapa-contenedor {
+            tr, .mapa-contenedor, .header-oficial {
                 page-break-inside: avoid;
             }
         }
@@ -139,12 +151,11 @@
 </head>
 <body>
 
-    <!-- BARRA DE CONTROL EN PANTALLA (NO SE IMPRIME) -->
     <div class="no-print bg-dark text-white py-2 px-4 shadow-sm sticky-top">
-        <div class="container d-flex justify-content-between align-items-center" style="max-width: 1050px;">
+        <div class="container d-flex justify-content-between align-items-center" style="max-width: 1080px;">
             <div>
-                <span class="fw-bold text-warning"><i class="fa-solid fa-print me-2"></i>Vista Previa de Hoja de Ruta</span>
-                <span class="small text-light ms-2 d-none d-md-inline">(Espera 1 segundo a que cargue el trazado vial antes de imprimir)</span>
+                <span class="fw-bold text-warning"><i class="fa-solid fa-print me-2"></i>Vista Previa — Documento Oficial de Despacho</span>
+                <span class="small text-light ms-2 d-none d-md-inline">(Verifica que el mapa vial haya cargado antes de imprimir)</span>
             </div>
             <div class="d-flex gap-2">
                 <a href="{% url volver_url %}" class="btn btn-outline-light btn-sm">
@@ -157,24 +168,34 @@
         </div>
     </div>
 
-    <!-- DOCUMENTO IMPRIMIBLE -->
     <div class="hoja-documento">
-        <!-- ENCABEZADO -->
-        <div class="header-box d-flex justify-content-between align-items-start">
-            <div>
-                <h4 class="fw-bold mb-0 text-uppercase">Emporio Alemán S.A. — Hoja de Ruta de Despacho</h4>
-                <div class="small text-muted">Planta de Origen y Retorno: Chiguayante (-36.9158, -73.0239) | Optimización Última Milla (IAnts Lab)</div>
+        <!-- ENCABEZADO OFICIAL DE PLANTA -->
+        <div class="header-oficial row g-0 mx-0">
+            <div class="col-8 header-brand d-flex flex-column justify-content-center">
+                <div class="small text-warning fw-bold text-uppercase">Emporio Alemán S.A. — División Logística y Distribución</div>
+                <h5 class="fw-bold mb-0 text-uppercase">Manifiesto de Carga y Hoja de Ruta</h5>
+                <div class="small text-light opacity-75">Planta Chiguayante • Despacho Refrigerado Última Milla</div>
             </div>
-            <div class="text-end">
-                <span class="badge bg-dark fs-6 px-3 py-2">CAMIÓN: {{ camion.patente }}</span>
-                <div class="small mt-1">Emisión: <strong>{{ fecha_emision|date:"d/m/Y H:i" }}</strong></div>
+            <div class="col-4 header-folio d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between">
+                    <span>FOLIO RUTA:</span>
+                    <strong>HR-{{ fecha_emision|date:"Ymd" }}-{{ camion.id }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>VEHÍCULO:</span>
+                    <strong class="text-uppercase">{{ camion.patente }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>FECHA EMISIÓN:</span>
+                    <strong>{{ fecha_emision|date:"d/m/Y H:i" }}</strong>
+                </div>
             </div>
         </div>
 
-        <!-- RESUMEN OPERATIVO DE CARGA -->
+        <!-- RESUMEN OPERATIVO DE FLOTA Y CARGA -->
         <div class="meta-grid row g-2 mx-0">
             <div class="col-4">
-                <div class="small text-muted">CONDUCTOR ASIGNADO</div>
+                <div class="small text-muted">CONDUCTOR RESPONSABLE</div>
                 <div class="fw-bold">
                     {% if camion.conductor %}
                         {{ camion.conductor.usuario.get_full_name|default:camion.conductor.usuario.username }}
@@ -184,39 +205,54 @@
                 </div>
             </div>
             <div class="col-3">
-                <div class="small text-muted">PARADAS ASIGNADAS</div>
-                <div class="fw-bold">{{ paradas|length }} / 30 puntos</div>
+                <div class="small text-muted">PUNTOS DE ENTREGA</div>
+                <div class="fw-bold">{{ paradas|length }} / 30 paradas</div>
             </div>
             <div class="col-3">
-                <div class="small text-muted">CARGA TOTAL / CAPACIDAD</div>
+                <div class="small text-muted">CARGA NETA / CAPACIDAD</div>
                 <div class="fw-bold">{{ peso_total_kg|floatformat:1 }} kg / {{ camion.capacidad_max_kg }} kg ({{ porcentaje_carga }}%)</div>
             </div>
             <div class="col-2">
-                <div class="small text-muted">TOTAL UNIDADES</div>
+                <div class="small text-muted">TOTAL BULTOS</div>
                 <div class="fw-bold">{{ total_bultos }} un.</div>
             </div>
         </div>
 
-        <!-- MAPA DE RUTA OPTIMIZADA -->
+        <!-- CONTROL DE CADENA DE FRÍO Y KILOMETRAJE EN PORTERÍA -->
+        <div class="control-planta-strip row g-2 mx-0">
+            <div class="col-6">
+                <strong>Control Cadena de Frío (°C):</strong>
+                <span class="ms-2">Temp. Salida: _____ °C</span>
+                <span class="ms-3">Temp. Retorno: _____ °C</span>
+            </div>
+            <div class="col-6 text-md-end">
+                <strong>Control Odómetro:</strong>
+                <span class="ms-2">Km Salida: __________</span>
+                <span class="ms-3">Km Retorno: __________</span>
+            </div>
+        </div>
+
+        <!-- CROQUIS VIAL DE RECORRIDO -->
         <div class="mapa-contenedor">
             <div class="bg-light border-bottom px-2 py-1 d-flex justify-content-between align-items-center small">
-                <span><strong><i class="fa-solid fa-route me-1 text-primary"></i>Croquis de Ruta Secuencial:</strong> Planta Chiguayante &rarr; Paradas Numeradas &rarr; Retorno</span>
+                <span><strong><i class="fa-solid fa-route me-1 text-danger"></i>Secuencia Geográfica:</strong> Planta Chiguayante &rarr; Paradas Numeradas &rarr; Retorno</span>
                 <span id="info-distancia-mapa" class="fw-bold text-dark">Calculando trazado vial...</span>
             </div>
             <div id="mapa-hoja-ruta"></div>
         </div>
 
-        <!-- TABLA SECUENCIAL DE PARADAS -->
+        <!-- TABLA SECUENCIAL DE REPARTO Y RECEPCIÓN -->
         <table class="table table-sm tabla-ruta mb-4">
             <thead>
                 <tr>
-                    <th class="text-center" style="width: 45px;">Ord.</th>
-                    <th style="width: 70px;">Pedido</th>
-                    <th style="width: 24%;">Cliente / Contacto</th>
-                    <th style="width: 26%;">Dirección y Comuna</th>
-                    <th style="width: 25%;">Detalle Carga (Picking)</th>
-                    <th style="width: 15%;">Restricciones / Horario</th>
-                    <th class="text-center" style="width: 55px;">Check</th>
+                    <th class="text-center" style="width: 38px;">Ord.</th>
+                    <th style="width: 65px;">Pedido</th>
+                    <th style="width: 21%;">Cliente / Teléfono</th>
+                    <th style="width: 22%;">Dirección y Comuna</th>
+                    <th style="width: 23%;">Detalle Picking (Productos)</th>
+                    <th style="width: 14%;">Ventana / Notas</th>
+                    <th class="text-center" style="width: 55px;">Hora</th>
+                    <th class="text-center" style="width: 90px;">Firma / Timbre</th>
                 </tr>
             </thead>
             <tbody>
@@ -249,38 +285,42 @@
                             —
                         {% endif %}
                     </td>
+                    <td class="text-center small text-muted">
+                        ___:___
+                    </td>
                     <td class="text-center">
                         <span class="check-box-print"></span>
+                        <div class="small text-muted mt-1" style="font-size: 9px;">Conforme</div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
-                        Este camión no tiene pedidos asignados en estado "En Ruta" actualmente.
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        Este vehículo no tiene pedidos asignados en ruta actualmente.
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- BLOQUE DE CONTROL Y FIRMAS -->
+        <!-- FIRMAS DE CONTROL INTERNO EN PLANTA -->
         <div class="row mt-4 pt-2">
             <div class="col-4">
                 <div class="firma-linea">
-                    <strong>V°B° Encargado de Picking / Bodega</strong><br>
-                    Control Cadena de Frío y Carga
+                    <strong>V°B° Encargado de Picking / Cámara</strong><br>
+                    Verificación de Carga y Temperatura
                 </div>
             </div>
             <div class="col-4">
                 <div class="firma-linea">
                     <strong>Firma Conductor ({{ camion.patente }})</strong><br>
-                    Recepción Conforme de Carga
+                    Recepción Conforme de Mercadería
                 </div>
             </div>
             <div class="col-4">
                 <div class="firma-linea">
-                    <strong>Cierre de Ruta en Planta</strong><br>
-                    Hora Salida: ____:____ | Retorno: ____:____
+                    <strong>Control Portería / Despacho Planta</strong><br>
+                    Salida: ____:____ hrs | Retorno: ____:____ hrs
                 </div>
             </div>
         </div>
@@ -289,7 +329,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const origenPlanta = [-36.9158, -73.0239];
-        const paradas = {{ puntos_mapa_json|safe }};
+        const paradas = JSON.parse('{{ puntos_mapa_json|escapejs }}');
         const infoDist = document.getElementById('info-distancia-mapa');
 
         const map = L.map('mapa-hoja-ruta', {
@@ -301,7 +341,6 @@
             maxZoom: 18
         }).addTo(map);
 
-        // Marcador Planta Emporio Alemán
         const iconoPlanta = L.divIcon({
             className: 'marcador-planta',
             html: 'P',
@@ -332,11 +371,9 @@
                 .addTo(map);
         });
 
-        // Retorno a planta
         puntosRuta.push(origenPlanta);
         map.fitBounds(bounds, { padding: [30, 30] });
 
-        // Trazar ruta real con OSRM si hay paradas
         if (paradas.length > 0) {
             const osrmCoords = puntosRuta.map(c => `${c[1]},${c[0]}`).join(';');
             const urlOsrm = `https://router.project-osrm.org/route/v1/driving/${osrmCoords}?geometries=geojson&overview=full`;
@@ -348,7 +385,7 @@
                         const ruta = data.routes[0];
                         const latlngs = ruta.geometry.coordinates.map(c => [c[1], c[0]]);
                         const poly = L.polyline(latlngs, {
-                            color: '#0d6efd',
+                            color: '#b71c1c',
                             weight: 4,
                             opacity: 0.85
                         }).addTo(map);
@@ -358,12 +395,12 @@
                         const min = Math.round(ruta.duration / 60);
                         infoDist.textContent = `Distancia vial estimada: ${km} km (~${min} min)`;
                     } else {
-                        L.polyline(puntosRuta, { color: '#0d6efd', weight: 3, dashArray: '6,6' }).addTo(map);
+                        L.polyline(puntosRuta, { color: '#b71c1c', weight: 3, dashArray: '6,6' }).addTo(map);
                         infoDist.textContent = 'Trazado directo entre paradas';
                     }
                 })
                 .catch(() => {
-                    L.polyline(puntosRuta, { color: '#0d6efd', weight: 3, dashArray: '6,6' }).addTo(map);
+                    L.polyline(puntosRuta, { color: '#b71c1c', weight: 3, dashArray: '6,6' }).addTo(map);
                     infoDist.textContent = 'Trazado directo entre paradas';
                 });
         } else {
